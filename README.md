@@ -1,1 +1,1 @@
-# tuts - Time Uncertain Time Series in R
+# tuts: time-uncertain time series in R
