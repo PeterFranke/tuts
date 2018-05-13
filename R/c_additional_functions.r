@@ -61,11 +61,11 @@ JAGS.objects=function(JAGS.output){
 #' ti.mu=DATA$observed$ti.obs.tnorm
 #' ti.sd= rep(1, length(ti.mu))
 #'
-#' Run simulations:
+#' # Run simulations:
 #' n.sim=1000
 #' WRAP=tuwrap(y=y,ti.mu=ti.mu,ti.sd=ti.sd,n.sim=n.sim)
 #'
-#' Compare the models:
+#' # Compare the models:
 #' summary(WRAP)
 #'
 #' # Individual summaries, plots and diagnostics:
