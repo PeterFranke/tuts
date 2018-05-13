@@ -285,6 +285,7 @@ return(Sim.Objects)
 #' ti.sd= rep(1, length(ti.mu))
 #'
 #' # Run the Bayesian Frequency Selection model with cross validation of the model:
+#' n.sim=1000
 #' BFS=tubfs(y=y,ti.mu=ti.mu,ti.sd=ti.sd,freqs='internal',n.sim=n.sim,n.chains=2, CV=TRUE)
 #'
 #' # Generate summary results:
@@ -433,6 +434,7 @@ summary.tuts_BFS = function(x, ...) {
 #' ti.sd= rep(1, length(ti.mu))
 #'
 #' # Run the Bayesian Frequency Selection model with cross validation of the model:
+#' n.sim=1000
 #' BFS=tubfs(y=y,ti.mu=ti.mu,ti.sd=ti.sd,freqs='internal',n.sim=n.sim,n.chains=2, CV=TRUE)
 #'
 #' # Plots and diagnostics:
