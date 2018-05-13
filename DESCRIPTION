@@ -6,7 +6,7 @@ Date: 2018-05-09
 Author: Peter Franke, Andrew C. Parnell 
 Maintainer: Peter Franke <peter.franke@ucdconnect.ie>
 Description: tuts is an R package containing statistical models of time-uncertain time series. It allows choosing the most appropriate model across range of s addressing frequency and non-frequency behavior of continuous and discrete (counting) time-uncertain data.
-License: GPL (>= 2) + file LICENSE
+License: GPL (>= 2) | file LICENSE
 Depends: R (>= 3.4.0), rjags
 Encoding: UTF-8
 LazyData: true
