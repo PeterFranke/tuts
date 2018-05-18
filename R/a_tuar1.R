@@ -1,53 +1,52 @@
 #' Time-uncertain AR(1) model
 #'
-#' \code{tuar1} estimates unbiased parameters of AR(1) model.
+#' \code{tuar1} estimates unbiased parameters of time-uncertain AR(1) model.
 #'
 #' @param y A vector of observations.
 #' @param ti.mu A vector of estimates of timing of observations.
 #' @param ti.sd A vector of standard deviations of timing.
 #' @param n.sim A number of simulations.
-#' @param CV cross-validation indicator.
-#' @param ... A list of optional parameters. The list contains thinning parameter,
-#' with the default value set to Thin=4, and the number of mcmc chains with the default value set
-#'  to n.chains=2.
+#' @param CV TRUE/FALSE cross-validation indicator.
+#' @param ... list of optional parameters:\cr
+#' - n.chains: number of MCMC chains, the default number of chains is set to 2.\cr
+#' - Thin: thinning factor, the default values is set to 4.\cr
 #'
 #' @examples
-#' # Import or simulate the data (simulation is chosen for illustrative purposes):
+#' \donttest{
+#' #1. Import or simulate the data (a simulation is chosen for illustrative purposes):
 #' DATA=simtuts(N=50,Harmonics=c(10,30,0), sin.ampl=c(10,10, 0), cos.ampl=c(0,0,0),
 #' trend=0,y.sd=3, ti.sd=1)
 #' y=DATA$observed$y.obs
 #' ti.mu=DATA$observed$ti.obs.tnorm
 #' ti.sd= rep(1, length(ti.mu))
 #'
-#' # Run the tuar1 model fitting with cross validation:
+#' #2. Fit the model:
 #' n.sim=1000
 #' TUAR1=tuar1(y=y,ti.mu=ti.mu,ti.sd=ti.sd,n.sim=n.sim, CV=TRUE)
 #'
-#' # Generate summary results (optional parameters are listed in brackets):
-#' summary(TUAR1)                                # Summary tables (CI, burn).
+#' #3. Generate summary results (optional parameters are listed in brackets):
+#' summary(TUAR1)                            # Summary results (CI, burn).
 #'
-#' # Plots and diagnostics (optional parameters are listed in brackets):
-#' plot(TUAR1,type='predTUTS')                   # One step out of salmple predictions of the model (CI, burn).
-#' plot(TUAR1,type='par', burn=0.4)              # Distributions of parameters of the AR(1) model (burn).
-#' plot(TUAR1,type='mcmc')                       # mcmc diagnostics.
-#' plot(TUAR1,type='cv', burn=0.4, CI=0.9)       # 5 fold cross validation plot(CI, burn).
-#' plot(TUAR1,type='GR')                         # Gelman-Rubin diagnostic (CI, burn).
-#' plot(TUAR1,type='volatility')                 # Volatility realizaitons.
-#'
+#' #4. Generate plots and diagnostics of the model (optional parameters are listed in brackets):
+#' plot(TUAR1,type='predTUTS')               # One step out of salmple predictions (CI, burn).
+#' plot(TUAR1,type='par', burn=0.4)          # Distributions of parameters (burn).
+#' plot(TUAR1,type='mcmc')                   # MCMC diagnostics.
+#' plot(TUAR1,type='cv', burn=0.4, CI=0.9)   # 5 fold cross validation (CI, burn).
+#' plot(TUAR1,type='GR')                     # Gelman-Rubin diagnostic (CI, burn).
+#' plot(TUAR1,type='volatility')             # Volatility realizaitons.
+#'}
 #' @export
 #'
 tuar1=function(y,ti.mu,ti.sd,n.sim,CV=FALSE, ...){
 # Data checking and basic operations ---------------------------------------------------------------------
 if (length(y)*2!=length(ti.mu)+length(ti.sd)){stop("Verify the input data.")}
 if(is.numeric(y)==FALSE ){stop("y must be a vector of rational numbers.")}
-#if(is.numeric(ti.mu)==FALSE | sum((ti.mu)<0)>0 ){
- # stop("ti.mu must be a vector of positive rational numbers.")}
 if(is.numeric(ti.sd)==FALSE | sum((ti.sd)<0)>0 ){
   stop("ti.sd must be a vector of positive rational numbers.")}
 if (sum(is.na(c(y,ti.mu,ti.sd)))>0){stop("Remove NAs.")}
 if (n.sim!=abs(round(n.sim))){stop("n.sim must be a positive integer.")}
 if (!is.logical(CV)){stop("CV must be a logical value.")}
-  # Optional parameters
+  # ----------------------------------------------------------------------------
   dots = list(...)
   if(missing(...)){Thin=4; n.chains=2}
   if(!is.numeric(dots$Thin)){
@@ -135,32 +134,33 @@ class(Sim.Objects)='tuts_ar1'
 return(Sim.Objects)
 }
 
-#' Prints summary of tuts_ar1 objects
+#' Prints summaryies of tuts_ar1 objects.
 #'
-#' \code{summary.tuts_ar1(x,...)} Prints summary of a tuts_ar1 object.
+#' \code{summary.tuts_ar1} prints summaries of tuts_ar1 objects.
 #'
-#' @param x A tuts_ar1 object.
-#' @param ... list of optional parameters. The list contains burn-in parameter
-#' ranging from 0 to 0.5, with the default value burn=0, and the credible interval parameter
-#' ranging between 0.5 and 1, with the default CI=0.99.
+#' @param object A tuts_ar1 object.
+#' @param ... list of optional parameters:\cr
+#'  - burn: burn-in parameter ranging from 0 to 0.7 with default value set to 0. \cr
+#'  - CI: credible interval ranging from 0.3 to 1 with default value set to 0.95.
 #'
 #' @examples
-#' # Import or simulate the data (simulation is chosen for illustrative purposes):
+#' \donttest{
+#' #1. Import or simulate the data (a simulation is chosen for illustrative purposes):
 #' DATA=simtuts(N=50,Harmonics=c(10,30,0), sin.ampl=c(10,10, 0), cos.ampl=c(0,0,0),
 #' trend=0,y.sd=3, ti.sd=1)
 #' y=DATA$observed$y.obs
 #' ti.mu=DATA$observed$ti.obs.tnorm
 #' ti.sd= rep(1, length(ti.mu))
 #'
-#' # Run the tuar1 model fitting with cross validation:
+#' #2. Fit the model:
 #' n.sim=1000
 #' TUAR1=tuar1(y=y,ti.mu=ti.mu,ti.sd=ti.sd,n.sim=n.sim, CV=TRUE)
 #'
-#' # Generate summary results (optional parameters are listed in brackets):
-#' summary(TUAR1)                                # Summary tables (CI, burn).
-#'
+#' #3. Generate summary results (optional parameters are listed in brackets):
+#' summary(TUAR1)                            # Summary results (CI, burn).
+#'}
 #' @export
-summary.tuts_ar1 = function(x, ...) {
+summary.tuts_ar1 = function(object, ...) {
   dots = list(...)
   if(missing(...)){burn=0; CI=0.99}
 
@@ -178,29 +178,29 @@ summary.tuts_ar1 = function(x, ...) {
     if(burn<0 | burn> 0.5){stop('burn is bounded between 0 and 0.5')
     }
   }
-  n.sim=dim(x$const)[1]
+  n.sim=dim(object$const)[1]
   if (burn==0){BURN=1}else{BURN=floor(burn*n.sim)}
   # ----------------------------------------------------------------------------
   cat('\n')
   cat('Estimates of parameters of interest and timing:\n')
   cat('-----------------------------------------------\n')
 
-  const=x$const[BURN:dim(x$const)[1]]
+  const=object$const[BURN:dim(object$const)[1]]
   const.lwr=quantile(const,(1-CI)/2)
   const.med=quantile(const,0.5)
   const.upr=quantile(const,1-(1-CI)/2)
 
-  alpha1=x$alpha1[BURN:dim(x$alpha1)[1]]
+  alpha1=object$alpha1[BURN:dim(object$alpha1)[1]]
   alpha1.lwr=quantile(alpha1,(1-CI)/2)
   alpha1.med=quantile(alpha1,0.5)
   alpha1.upr=quantile(alpha1,1-(1-CI)/2)
 
-  precision=x$precision[BURN:dim(x$precision)[1]]
+  precision=object$precision[BURN:dim(object$precision)[1]]
   precision.lwr=quantile(precision,(1-CI)/2)
   precision.med=quantile(precision,0.5)
   precision.upr=quantile(precision,1-(1-CI)/2)
 
-  ti=x$ti.sim[BURN:dim(x$ti.sim)[1],]
+  ti=object$ti.sim[BURN:dim(object$ti.sim)[1],]
   ti.lwr=apply(ti,2,'quantile',(1-CI)/2)
   ti.med=apply(ti,2,'quantile',0.5)
   ti.upr=apply(ti,2,'quantile',1-(1-CI)/2)
@@ -218,7 +218,7 @@ summary.tuts_ar1 = function(x, ...) {
   cat('\n')
   cat('Deviance information criterion:\n')
   cat('-------------------------------\n')
-  print(x$DIC)
+  print(object$DIC)
   cat('-------------------------------\n')
 }
 ####################################################################################################
@@ -226,35 +226,40 @@ summary.tuts_ar1 = function(x, ...) {
 #'
 #' \code{plot.tuts_ar1(x,type,...)} plots summaries and diagnostics of tuts_ar1 objects.
 #'
-#' @param x A tuts_ar1 objects.
+#' @param x A tuts_ar1 object.
 #'
-#' @param type plot/diagnostic type (options:
-#' 'predTUTS' plots one step predictions of the model, 'GR' plots Gelman-Rubin diagnostics,
-#' 'cv' plots 5-fold cross validation, 'mcmc' plots diagnostics of mcmc objects)
-#' @param ... list of optional parameters: 'burn' (burn-in parameter ranging from 0 to 0.7 with
-#'  default value set to 0), and CI (credible interval ranging from 0.3 to 1 with
-#'  default value set to 0.95)
+#' @param type plot type with the following options:\cr
+#'  - 'predTUTS' plots one step predictions of the model. \cr
+#'  - 'par' plots distributions of parameters of the model. \cr
+#'  - 'volatility' plots volatility realizations. \cr
+#'  - 'GR' plots Gelman-Rubin diagnostics. \cr
+#'  - 'cv' plots 5-fold cross validation. \cr
+#'  - 'mcmc' plots diagnostics of MCMC/JAGS objects. \cr
+#' @param ... list of optional parameters:\cr
+#'  - burn: burn-in parameter ranging from 0 to 0.7 with default value set to 0. \cr
+#'  - CI: credible interval ranging from 0.3 to 1 with default value set to 0.95.
 #'
 #' @examples
-#' # Import or simulate the data (simulation is chosen for illustrative purposes):
+#' \donttest{
+#' #1. Import or simulate the data (a simulation is chosen for illustrative purposes):
 #' DATA=simtuts(N=50,Harmonics=c(10,30,0), sin.ampl=c(10,10, 0), cos.ampl=c(0,0,0),
 #' trend=0,y.sd=3, ti.sd=1)
 #' y=DATA$observed$y.obs
 #' ti.mu=DATA$observed$ti.obs.tnorm
 #' ti.sd= rep(1, length(ti.mu))
 #'
-#' # Run the tuar1 model fitting with cross validation:
+#' #2. Fit the model:
 #' n.sim=1000
 #' TUAR1=tuar1(y=y,ti.mu=ti.mu,ti.sd=ti.sd,n.sim=n.sim, CV=TRUE)
 #'
-#' # Plots and diagnostics (optional parameters are listed in brackets):
-#' plot(TUAR1,type='predTUTS')                   # One step out of salmple predictions of the model (CI, burn).
-#' plot(TUAR1,type='par', burn=0.4)              # Distributions of parameters of the AR(1) model (burn).
-#' plot(TUAR1,type='mcmc')                       # mcmc diagnostics.
-#' plot(TUAR1,type='cv', burn=0.4, CI=0.9)       # 5 fold cross validation plot(CI, burn).
-#' plot(TUAR1,type='GR')                         # Gelman-Rubin diagnostic (CI, burn).
-#' plot(TUAR1,type='volatility')                 # Volatility realizaitons.
-#'
+#' #3. Generate plots and diagnostics of the model (optional parameters are listed in brackets):
+#' plot(TUAR1,type='predTUTS')               # One step out of salmple predictions (CI, burn).
+#' plot(TUAR1,type='par', burn=0.4)          # Distributions of parameters (burn).
+#' plot(TUAR1,type='mcmc')                   # MCMC diagnostics.
+#' plot(TUAR1,type='cv', burn=0.4, CI=0.9)   # 5 fold cross validation (CI, burn).
+#' plot(TUAR1,type='GR')                     # Gelman-Rubin diagnostic (CI, burn).
+#' plot(TUAR1,type='volatility')             # Volatility realizaitons.
+#'}
 #' @export
 plot.tuts_ar1 = function(x, type, ...) {
   if (sum(type==c('predTUTS','GR','cv','mcmc','par','volatility'))==0){
@@ -280,16 +285,15 @@ plot.tuts_ar1 = function(x, type, ...) {
   }
   n.sim=dim(x$alpha1)[1]
   if (burn==0){BURN=1}else{BURN=floor(burn*n.sim)}
-
-  #############################################################
+  # ----------------------------------------------------------------------------
   if(type=='par') {
-    par(mfrow=c(1,3))
-    plot(density(x$const[BURN:dim(x$const)[1]]),main="const")
-    plot(density(x$alpha1[BURN:dim(x$alpha1)[1]]),main="alpha1")
-    plot(density(x$precision[BURN:dim(x$precision)[1]]),main="precision")
-    par(mfrow=c(1,1))
+    graphics::par(mfrow=c(1,3))
+    graphics::plot(density(x$const[BURN:dim(x$const)[1]]),main="const")
+    graphics::plot(density(x$alpha1[BURN:dim(x$alpha1)[1]]),main="alpha1")
+    graphics::plot(density(x$precision[BURN:dim(x$precision)[1]]),main="precision")
+    graphics::par(mfrow=c(1,1))
   }
-  ##########################################################################
+  # ----------------------------------------------------------------------------
   if(type=='predTUTS') {
     if (sum(names(x)=="CVpred")<1){stop("Object does not contain cross validation")}
     PRED.LWR=apply(x$CVpred[BURN:dim(x$CVpred)[1],],2,'quantile',(1-CI)/2)
@@ -299,35 +303,33 @@ plot.tuts_ar1 = function(x, type, ...) {
     ti.sim=apply(x$ti.sim[BURN:dim(x$ti.sim)[1],],2,'quantile',0.5)
 
     MAIN=paste("One step out of sample predictions at CI= ", CI*100,"%",sep='')
-    plot(y=x$y,x=x$ti.mu,type='l',main=MAIN,ylab="Observations",xlab='time',
+    graphics::plot(y=x$y,x=x$ti.mu,type='l',main=MAIN,ylab="Observations",xlab='time',
          ylim=c(min(x$CVpred),1.2*max(x$CVpred)), xlim=c(min(x$ti.mu,ti.sim),
                                                          max(x$ti.mu,ti.sim)),lwd=2)
-    lines(y=PRED.LWR,x=ti.sim[2:length(ti.sim)],type='l',col='blue',lwd=1,lty=2)
-    lines(y=PRED.MED,x=ti.sim[2:length(ti.sim)],type='l',col='blue',lwd=1,lty=1)
-    lines(y=PRED.UPR,x=ti.sim[2:length(ti.sim)],type='l',col='blue',lwd=1,lty=2)
+    graphics::lines(y=PRED.LWR,x=ti.sim[2:length(ti.sim)],type='l',col='blue',lwd=1,lty=2)
+    graphics::lines(y=PRED.MED,x=ti.sim[2:length(ti.sim)],type='l',col='blue',lwd=1,lty=1)
+    graphics::lines(y=PRED.UPR,x=ti.sim[2:length(ti.sim)],type='l',col='blue',lwd=1,lty=2)
 
-    legend("topright",legend = c("Observed","Upper CI","Medium","Lower CI"),
+    graphics::legend("topright",legend = c("Observed","Upper CI","Medium","Lower CI"),
            col=c("black","blue","blue","blue"),lwd=c(2,1,1,1),lty=c(1,2,1,2))
   }
-
-  ##########################################################################
+  # ----------------------------------------------------------------------------
   if(type=='cv') {
     if (sum(names(x)=="CVpred")<1){stop("Object does not contain cross validation")}
     PRED=apply(x$CVpred[BURN:dim(x$CVpred)[1],],2,'quantile',0.5)
     MAIN="Cross-Validation: One step out of sample predictions"
 
-    par(mfrow=c(1,1))
-    plot(x=x$y[2:length(x$y)],y=PRED,xlab="Actual",ylab="Predicted", main=MAIN, pch=18)
-    abline(0,1,col='blue')
+    graphics::par(mfrow=c(1,1))
+    graphics::plot(x=x$y[2:length(x$y)],y=PRED,xlab="Actual",ylab="Predicted", main=MAIN, pch=18)
+    graphics::abline(0,1,col='blue')
 
     RSQ=cor(x$y[2:length(x$y)],PRED)^2* 100
 
     LAB = bquote(italic(R)^2 == .(paste(format(RSQ, digits = 0),"%",sep="")))
-    text(x=(min(x$y)+0.9*(max(x$y)-min(x$y))),y=(min(PRED)+0.1*(max(PRED)-min(PRED))),LAB)
-    #text(x=max(x$y[2:(length(x$y)-2)])-2,y=min(PRED[2:(length(x$y)-2)])+1,LAB)
+    graphics::text(x=(min(x$y)+0.9*(max(x$y)-min(x$y))),y=(min(PRED)+0.1*(max(PRED)-min(PRED))),LAB)
   }
 
-  #################################################################################
+  # ----------------------------------------------------------------------------
   if(type=='GR') {
     if(burn>0){ABURNIN=TRUE} else{ABURNIN=FALSE}
 
@@ -337,30 +339,31 @@ plot.tuts_ar1 = function(x, type, ...) {
     REG=GELMAN$psrf[!TIOBJ,]
     labels =rownames(REG)
     TI=GELMAN$psrf[TIOBJ,]
-    par(mfrow=c(2,1))
-    plot(REG[,1],ylim=c(0,max(REG)+1.5),xaxt='n',ylab="Factor", xlab='Parameters',
+    graphics::par(mfrow=c(2,1))
+    graphics::plot(REG[,1],ylim=c(0,max(REG)+1.5),xaxt='n',ylab="Factor", xlab='Parameters',
          main=paste("Gelman-Rubin diagnostics: Potential scale reduction factors \n with the upper confidence bounds at ",
                     CI*100,"%",sep="")
     )
-    text(seq(1,length(labels),by=1), par("usr")[3]-max(REG)*0.2, srt = 00, adj= 0.5, xpd = TRUE, labels =labels, cex=0.65)
-    arrows(x0=1:dim(REG)[1],y0=REG[,1],x1=1:dim(REG)[1],y1=REG[,2],code=3,length=0.04,angle=90,col='darkgray')
-    abline(h=1);
-    legend("topright", c("Estimate"),lty=c(NA),pch=c(1),lwd=c(1), col=c("black"),border="white")
+    graphics::text(seq(1,length(labels),by=1), graphics::par("usr")[3]-max(REG)*0.2, srt = 00, adj= 0.5, xpd = TRUE, labels =labels, cex=0.65)
+    graphics::arrows(x0=1:dim(REG)[1],y0=REG[,1],x1=1:dim(REG)[1],y1=REG[,2],code=3,length=0.04,angle=90,col='darkgray')
+    graphics::abline(h=1);
+    graphics::legend("topright", c("Estimate"),lty=c(NA),pch=c(1),lwd=c(1), col=c("black"),border="white")
 
-    plot(TI[,1],ylim=c(0,(max(TI)*1.8)),ylab="Factor", xlab='Simulated timings of observations')
-    arrows(x0=1:dim(TI)[1],y0=TI[,1],x1=1:dim(TI)[1],y1=TI[,2],code=3,length=0.04,angle=90,col='darkgray')
-    abline(h=1);
-    legend("topright", c("Estimate"),lty=c(NA),pch=c(1),lwd=c(1), col=c("black"),border="white")
+    graphics::plot(TI[,1],ylim=c(0,(max(TI)*1.8)),ylab="Factor", xlab='Simulated timings of observations')
+    graphics::arrows(x0=1:dim(TI)[1],y0=TI[,1],x1=1:dim(TI)[1],y1=TI[,2],code=3,length=0.04,angle=90,col='darkgray')
+    graphics::abline(h=1);
+    graphics::legend("topright", c("Estimate"),lty=c(NA),pch=c(1),lwd=c(1), col=c("black"),border="white")
 
-    par(mfrow=c(1,1))
+    graphics::par(mfrow=c(1,1))
 
-
+    # ----------------------------------------------------------------------------
   }
   if(type=='mcmc') {
     mcmcplot(x$JAGS, parms=c('const','alpha1','precision','ti.sim'))
   }
+  # ----------------------------------------------------------------------------
   if(type=='volatility') {
-    plot(sqrt(sqrt(1/sqrt(x$precision[BURN:dim(x$precision)[1],]))),type='l', xlab='Sim ID',ylab='Std Deviation',main='Standard Deviaiton')
+    graphics::plot(sqrt(sqrt(1/sqrt(x$precision[BURN:dim(x$precision)[1],]))),type='l', xlab='Sim ID',ylab='Std Deviation',main='Standard Deviaiton')
   }
 }
 

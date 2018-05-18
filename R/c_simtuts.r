@@ -1,11 +1,11 @@
 #' Generating time-uncertain time series
 #'
-#' \code{simtuts} A function for generating time-uncertain time series. It returns two data frames
-#' containing simulation of an actual process and its observations.
-#' Timing of the simulated process is modelled as \emph{t~U(0,N)}, and its observations consist of a sum of
-#' a constant, a linear trend, and three sine and three cosine functions.
-#' The observed process assumes normally distributed values \emph{y.obs~N(y.act, y.sd)},
-#' with the timing modelled in two ways:
+#' \code{simtuts} A function generating time-uncertain time series. It returns two data frames
+#' containing simulation of an actual process and its observations.\cr
+#' The actual process consists of a sum of a constant, a linear trend, and three sine and three cosine functions, and its
+#' observations are normally distributed \emph{y.obs~N(y.act, y.sd)}.\cr
+#' Timing of simulated processes is modeled  as \emph{t.act~U(0,N)} and sorted in the ascending order.
+#' Observations of timings are modeled  in two ways:
 #' \enumerate{
 #' \item  Normally distributed timing \emph{t.obs.norm~N(ti.act,ti.sd)},
 #' sorted from the smallest to the largest value to ensure non-overlapping feature of observations,
@@ -22,12 +22,11 @@
 #' @param ti.sd A standard deviation of estimates of timing.
 #'
 #' @examples
-#' # Generate actual and observed time series as a sum of 2 sine functions:
+#' # 1. Generate actual and observed time series as a sum of 2 sine functions:
 #' DATA=simtuts(N=50,Harmonics=c(10,20,0), sin.ampl=c(10,10, 0), cos.ampl=c(0,0,0),trend=0,
 #' y.sd=2, ti.sd=0.3)
 #'
 #' @references  \url{https://en.wikipedia.org/wiki/Truncated_normal_distribution}
-#'
 #' @import truncnorm
 #' @import rjags
 #' @import coda
@@ -40,12 +39,6 @@
 #' @export
 simtuts=function(N,Harmonics,sin.ampl,cos.ampl,trend=0, y.sd,ti.sd){
   if((round(N)==N)==FALSE | N<1){stop("N must be a positive integer")}
-  #if(is.numeric(Harmonics)!=TRUE | length(Harmonics)!=3 | sum(Harmonics>=0)<3){
-   # stop("Harmonics must be a vector of three non-negative rational numbers, typhically integers smaller than N.")}
-  #if(is.numeric(sin.ampl)!=TRUE | length(sin.ampl)!=3){
-  #  stop("sin.ampl  must be a vector of three non-negative rational numbers.")}
-  #if(is.numeric(cos.ampl)!=TRUE | length(cos.ampl)!=3){
-  #  stop("cos.ampl  must be a vector of three non-negative rational numbers.")}
   if(is.numeric(trend)==FALSE | length(trend)>1){stop("trend must be a real number.")}
   if(is.numeric(y.sd)==FALSE | length(y.sd)>1 | y.sd<0){stop("y.sd must be a positive rational number.")}
   if(is.numeric(ti.sd)==FALSE | length(ti.sd)>1 | ti.sd<0){stop("ti.sd must be a positive rational number.")}

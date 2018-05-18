@@ -1,46 +1,47 @@
 #' Time uncertain Poisson regression with the Bayesian Frequency Selection method
 #'
-#' \code{tupoisbsf}
-#' spectral analysis of time-uncertain time series of count data sets using the Bayesian Frequency Selection method
-#'  described in the paper \emph{"Frequency selection in palaeoclimate time series: a model-based
-#'   approach incorporating possible time uncertainty"} by P. Franke, Prof B. Huntley, Dr A. Parnell.
+#' \code{tupoisbsf} performs spectral analysis of time-uncertain time series of count data sets
+#' using bayesian frequency selection method.
 #'
 #' @param y A vector of observations.
 #' @param ti.mu A vector of estimates/observed timings of observations.
 #' @param ti.sd A vector of standard deviations of timings.
 #' @param n.sim A number of simulations.
-#' @param CV cross-validation indicator.
-#' @param ... optional arguments. n.chains: number of MCMC chains, default is set to 2.
-#' Thin: Thinning factor, default is set to 4.m: maximum number of significant frequencies
-#'  in the data, the default is set to 5. polyorder: order of the polynomial regression component,
-#'  the default is set to 3. freqs: set to a positive integer k returns a vector of k equally spaced frequencies in the Nyquist
-#'   range. freqs can be provided as a vector of custom frequencies of interest. Set to 'internal' generates an equally
-#'   spaced vector of frequencies in the Nyquist range
+#' @param CV TRUE/FALSE cross-validation indicator.
+#' @param ... optional arguments: \cr
+#' - n.chains: number of MCMC chains, the default number of chains is set to 2.\cr
+#' - Thin: thinning factor, the default values is set to 4.\cr
+#' - m: maximum number of significant frequencies in the data, the default value is set to 5. \cr
+#' - polyorder: the polynomial regression component, the default odrer is set to 3. \cr
+#' - freqs: set to a positive integer k returns a vector of k equally spaced frequencies in the Nyquist
+#'   range. freqs can be provided as a vector of custom frequencies of interest. Set to 'internal'
+#'   (the default value) generates a vector of equally spaced frequencies in the Nyquist range.
 #'
 #' @examples
-#' # Import or simulate the data (simulation is chosen for illustrative purposes):
+#' \donttest{
+#' #1. Import or simulate the data (simulation is chosen for illustrative purposes):
 #' DATA=simtuts(N=50,Harmonics=c(10,30,0), sin.ampl=c(10,10, 0), cos.ampl=c(0,0,0),
 #' trend=0,y.sd=3, ti.sd=1)
-#' y=DATA$observed$y.obs ; y=round(y)-min(round(y))
+#' y=DATA$observed$y.obs; y=round(y)-min(round(y))
 #' ti.mu=DATA$observed$ti.obs.tnorm
 #' ti.sd= rep(1, length(ti.mu))
 #'
-#' # Run the Bayesian Frequency Selection model with cross validation of the model:
+#' #2. Fit the model:
 #' n.sim=1000
 #' TUPOIS=tupoisbsf(y=y,ti.mu=ti.mu,ti.sd=ti.sd,freqs='internal',n.sim=n.sim,n.chains=2, CV=TRUE)
 #'
-#' # Generate summary results (optional parameters are listed in brackets):
+#' #3. Generate summary results (optional parameters are listed in brackets):
 #' summary(TUPOIS)                               # Summary results (CI, burn).
 #' summary(TUPOIS,burn=0.2)                      # Results after 20% of burn-in (CI).
 #'
-#' # Plots and diagnostics (optional parameters are listed in brackets):
+#' #4. Generate plots and diagnostics of the model (optional parameters are listed in brackets):
 #' plot(TUPOIS,type='periodogram')               # spectral analysis (CI, burn).
-#' plot(TUPOIS,type='predTUTS', CI=0.99)         # One step predictions of the model (CI, burn).
-#' plot(TUPOIS,type='cv')                        # 5 fold cross validation plot (CI, burn).
+#' plot(TUPOIS,type='predTUTS', CI=0.99)         # One step predictions (CI, burn).
+#' plot(TUPOIS,type='cv')                        # 5 fold cross validation (CI, burn).
 #' plot(TUPOIS,type='GR')                        # Gelman-Rubin diagnostics (CI, burn).
-#' plot(TUPOIS,type='mcmc')                      # mcmc diagnostics.
+#' plot(TUPOIS,type='mcmc')                      # MCMC diagnostics.
 #' plot(TUPOIS,type='lambda')                    # Realizaitons of lambda.
-#'
+#' }
 #' @export
 #'
 tupoisbsf=function(y,ti.mu,ti.sd,n.sim,CV=FALSE,...){
@@ -154,9 +155,6 @@ tupoisbsf=function(y,ti.mu,ti.sd,n.sim,CV=FALSE,...){
 }"
 # R2Jags Main Sim  ---------------------------------------------------------------------------------------
   data=list(y=y, ti.mu=ti.mu,ti.sd=ti.sd, n=length(ti.mu), n.freqs=length(freqs), freqs=freqs, pi=pi,m=m)
-  #init=list(const=log(mean(y)),alpha1=0,alpha2=0,alpha3=0,
-  #          beta=rep(0,2*length(freqs)),Ind=rep(0,2*length(freqs))
-  #          ,"ti.sim.tmp"=ti.mu)
   for(k in (1:n.chains)){
     inits = parallel.seeds("base::BaseRNG", n.chains)
     inits[[k]]$const = 0
@@ -225,34 +223,35 @@ tupoisbsf=function(y,ti.mu,ti.sd,n.sim,CV=FALSE,...){
   return(Sim.Objects)
 }
 
-
-
 #' Summary of tuts_poisBFS objects.
 #'
-#' \code{summary.tuts_poisBFS(x,...)} prints summaries of tuts_poisBFS objects.
+#' \code{summary.tuts_poisBFS} prints summaries of tuts_poisBFS objects.
 #'
-#' @param x A tuts_poisBFS object.
-#' @param ... A list of optional parameters.burn: burn-in parameter
-#' ranging from 0 to 0.7, the default value is 0.CI: confidence interval, default is set to 0.99.
+#' @param object A tuts_poisBFS object.
+#' @param ... A list of optional parameters: \cr
+#'  - burn: burn-in parameter ranging from 0 to 0.7, the default value is 0.\cr
+#'  - CI: confidence interval, the default value is set to 0.99.
 #'
 #' @examples
-#' # Import or simulate the data (simulation is chosen for illustrative purposes):
+#' \donttest{
+#' #1. Import or simulate the data (simulation is chosen for illustrative purposes):
 #' DATA=simtuts(N=50,Harmonics=c(10,30,0), sin.ampl=c(10,10, 0), cos.ampl=c(0,0,0),
 #' trend=0,y.sd=3, ti.sd=1)
-#' y=DATA$observed$y.obs ; y=round(y)-min(round(y))
+#' y=DATA$observed$y.obs; y=round(y)-min(round(y))
 #' ti.mu=DATA$observed$ti.obs.tnorm
 #' ti.sd= rep(1, length(ti.mu))
 #'
-#' # Run the Bayesian Frequency Selection model with cross validation of the model:
+#' #2. Fit the model:
 #' n.sim=1000
 #' TUPOIS=tupoisbsf(y=y,ti.mu=ti.mu,ti.sd=ti.sd,freqs='internal',n.sim=n.sim,n.chains=2, CV=TRUE)
 #'
-#' # Generate summary results (optional parameters are listed in brackets):
+#' #3. Generate summary results (optional parameters are listed in brackets):
 #' summary(TUPOIS)                               # Summary results (CI, burn).
 #' summary(TUPOIS,burn=0.2)                      # Results after 20% of burn-in (CI).
 #'
+#' }
 #' @export
-summary.tuts_poisBFS = function(x, ...) {
+summary.tuts_poisBFS = function(object, ...) {
   dots = list(...)
   if(missing(...)){burn=0; CI=0.99}
 
@@ -270,23 +269,23 @@ summary.tuts_poisBFS = function(x, ...) {
     if(burn<0 | burn>0.7){stop('burn is bounded between 0 and 0.7')
     }
   }
-  n.sim=dim(x$const)[1]
+  n.sim=dim(object$const)[1]
   if (burn==0){BURN=1}else{BURN=floor(burn*n.sim)}
   # ----------------------------------------------------------------------------
   cat('\n')
   cat('Bayesian Frequency Selection:\n')
   cat('-----------------------------\n')
 
-  IND=x$Ind[BURN:dim(x$Ind)[1],]
+  IND=object$Ind[BURN:dim(object$Ind)[1],]
   IND=IND[,1:(dim(IND)[2]/2)]+IND[,(dim(IND)[2]/2+1):dim(IND)[2]]
   IND[IND==2]=1
 
-  PWR=x$Spectrum[BURN:dim(x$Spectrum)[1],]
+  PWR=object$Spectrum[BURN:dim(object$Spectrum)[1],]
   PWR.lwr=apply(PWR,2,'quantile',0.005)
   PWR.med=apply(PWR,2,'quantile',0.5)
   PWR.upr=apply(PWR,2,'quantile',0.995)
 
-  Frequency=x$freqs
+  Frequency=object$freqs
   Period=1/Frequency
   Probability=apply(IND,2,sum)/(dim(IND)[1])
 
@@ -298,20 +297,20 @@ summary.tuts_poisBFS = function(x, ...) {
   cat('Regression Parameters and estimates of timing:\n')
   cat('----------------------------------------------\n')
 
-  const=x$const[BURN:length(x$const)]
+  const=object$const[BURN:length(object$const)]
   const.lwr=quantile(const,(1-CI)/2)
   const.med=quantile(const,0.5)
   const.upr=quantile(const,1-(1-CI)/2)
   constName="const"
 
   lwr=med=upr=NAMES=NA
-  if(x$polyorder>0){
+  if(object$polyorder>0){
     alpha.lwr=NA
     alpha.med=NA
     alpha.upr=NA
     alphaNames=NA
-    for (i in 1:x$polyorder){
-      eval(parse(text=paste("alpha",i,"=x$alpha",i,"[BURN:dim(x$alpha",i,")[1],]",sep="")))
+    for (i in 1:object$polyorder){
+      eval(parse(text=paste("alpha",i,"=object$alpha",i,"[BURN:dim(object$alpha",i,")[1],]",sep="")))
       alpha.lwr[i]=eval(parse(text=paste("quantile(alpha",i,",(1-CI)/2)",sep="")))
       alpha.med[i]=eval(parse(text=paste("quantile(alpha",i,",0.5)",sep="")))
       alpha.upr[i]=eval(parse(text=paste("quantile(alpha",i,",1-(1-CI)/2)",sep="")))
@@ -319,26 +318,26 @@ summary.tuts_poisBFS = function(x, ...) {
     }
   }
 
-  Spectrum=x$Spectrum[BURN:dim(x$Spectrum)[1],]
+  Spectrum=object$Spectrum[BURN:dim(object$Spectrum)[1],]
   Spectrum.lwr=apply(Spectrum,2,'quantile',(1-CI)/2)
   Spectrum.med=apply(Spectrum,2,'quantile',0.5)
   Spectrum.upr=apply(Spectrum,2,'quantile',1-(1-CI)/2)
   SpectrumNames=names(Spectrum.med)
 
 
-  beta=x$beta[BURN:dim(x$beta)[1],]
+  beta=object$beta[BURN:dim(object$beta)[1],]
   beta.lwr=apply(beta,2,'quantile',(1-CI)/2)
   beta.med=apply(beta,2,'quantile',0.5)
   beta.upr=apply(beta,2,'quantile',1-(1-CI)/2)
   betaNames=names(beta.med)
 
-  lambda=x$lambda[BURN:dim(x$lambda)[1],]
+  lambda=object$lambda[BURN:dim(object$lambda)[1],]
   lambda.lwr=apply(lambda,2,'quantile',(1-CI)/2)
   lambda.med=apply(lambda,2,'quantile',0.5)
   lambda.upr=apply(lambda,2,'quantile',1-(1-CI)/2)
   lambdaNames=names(lambda.med)
 
-  ti=x$ti.sim[BURN:dim(x$ti.sim)[1],]
+  ti=object$ti.sim[BURN:dim(object$ti.sim)[1],]
   ti.lwr=apply(ti,2,'quantile',(1-CI)/2)
   ti.med=apply(ti,2,'quantile',0.5)
   ti.upr=apply(ti,2,'quantile',1-(1-CI)/2)
@@ -367,42 +366,47 @@ summary.tuts_poisBFS = function(x, ...) {
   cat('\n')
   cat('Deviance information criterion:\n')
   cat('-------------------------------\n')
-  print(x$DIC)
+  print(object$DIC)
   cat('-------------------------------\n')
 }
 ####################################################################################################
 #' Graphical summaries and diagnostics of tuts_BFS objects.
 #'
-#' \code{plot.tuts_poisBFS(x,...)} plots and diagnostics of tuts_BFS objects.
+#' \code{plot.tuts_poisBFS} plots and diagnostics of tuts_BFS objects.
 #'
 #' @param x A tuts_BFS objects.
-#' @param type plot/disgnostic type (options: 'periodogram' plots estimates of power spectrum,
-#' 'predTUTS' plots one step predictions of the model, 'GR' plots Gelman-Rubin diagnostics,
-#' 'cv' plots 5-fold cross validation, 'mcmc' plots diagnostics of mcmc objects, and 'lambda' plots
-#'  lambda realizations)
-#' @param ... list of optional parameters: 'burn' (burn-in parameter ranging from 0 to 0.7 with
-#'  default value set to 0), and CI (credible interval ranging from 0.3 to 1 with
-#'  default value set to 0.95)
+#' @param type plot type with the following options:\cr
+#'  - 'periodogram' plots estimates of power spectrum.  \cr
+#'  - 'predTUTS' plots one step predictions of the model. \cr
+#'  - 'GR' plots Gelman-Rubin diagnostics. \cr
+#'  - 'cv' plots 5-fold cross validation. \cr
+#'  - 'mcmc' plots diagnostics of MCMC/JAGS objects. \cr
+#'  - 'lambda' plots lambda realizations. \cr
+#' @param ... list of optional parameters:\cr
+#'  - burn: burn-in parameter ranging from 0 to 0.7 with default value set to 0. \cr
+#'  - CI: credible interval ranging from 0.3 to 1 with default value set to 0.95.
 #'
 #' @examples
-#' # Import or simulate the data (simulation is chosen for illustrative purposes):
+#' \donttest{
+#' #1. Import or simulate the data (simulation is chosen for illustrative purposes):
 #' DATA=simtuts(N=50,Harmonics=c(10,30,0), sin.ampl=c(10,10, 0), cos.ampl=c(0,0,0),
 #' trend=0,y.sd=3, ti.sd=1)
-#' y=DATA$observed$y.obs ; y=round(y)-min(round(y))
+#' y=DATA$observed$y.obs; y=round(y)-min(round(y))
 #' ti.mu=DATA$observed$ti.obs.tnorm
 #' ti.sd= rep(1, length(ti.mu))
 #'
-#' # Run the Bayesian Frequency Selection model with cross validation of the model:
+#' #2. Fit the model:
 #' n.sim=1000
 #' TUPOIS=tupoisbsf(y=y,ti.mu=ti.mu,ti.sd=ti.sd,freqs='internal',n.sim=n.sim,n.chains=2, CV=TRUE)
 #'
-#' # Plots and diagnostics (optional parameters are listed in brackets):
+#' #3. Generate plots and diagnostics of the model (optional parameters are listed in brackets):
 #' plot(TUPOIS,type='periodogram')               # spectral analysis (CI, burn).
-#' plot(TUPOIS,type='predTUTS', CI=0.99)         # One step predictions of the model (CI, burn).
-#' plot(TUPOIS,type='cv')                        # 5 fold cross validation plot (CI, burn).
+#' plot(TUPOIS,type='predTUTS', CI=0.99)         # One step predictions (CI, burn).
+#' plot(TUPOIS,type='cv')                        # 5 fold cross validation (CI, burn).
 #' plot(TUPOIS,type='GR')                        # Gelman-Rubin diagnostics (CI, burn).
-#' plot(TUPOIS,type='mcmc')                      # mcmc diagnostics.
+#' plot(TUPOIS,type='mcmc')                      # MCMC diagnostics.
 #' plot(TUPOIS,type='lambda')                    # Realizaitons of lambda.
+#' }
 #' @export
 plot.tuts_poisBFS = function(x, type, ...) {
   if (sum(type==c('periodogram','predTUTS','GR','cv','mcmc','lambda'))==0){
@@ -431,7 +435,7 @@ plot.tuts_poisBFS = function(x, type, ...) {
   if (burn==0){BURN=1}else{BURN=floor(burn*n.sim)}
 
 
-  par(mfrow=c(1,1))
+  graphics::par(mfrow=c(1,1))
 
   if(type=='periodogram') {
     IND=x$Ind[BURN:dim(x$Ind)[1],]
@@ -448,41 +452,41 @@ plot.tuts_poisBFS = function(x, type, ...) {
     Probability=apply(IND,2,sum)/(dim(IND)[1])
     DIV=round(max(PWR.upr)/4,- floor(log10(max(PWR.upr)/4)))
     YLAB=seq(from=0,to=4*DIV, by=DIV)
-    ####################################################################################
-    par(mar=c(5,5,5,5))
-    par(mfrow=c(1,1))
-    plot(x=Frequency,y=PWR.med,pch=20,xlab="frequency", ylab="",ylim=c(-0.4*max(PWR.upr), 1.25*max(PWR.upr)),yaxt="n", main="BFS Spectrum")
-    axis(side=2, at=YLAB)
-    mtext("Power", side=2, line=2.5, at=max(PWR.upr)/2)
+    # ----------------------------------------------------------------------------
+    graphics::par(mar=c(5,5,5,5))
+    graphics::par(mfrow=c(1,1))
+    graphics::plot(x=Frequency,y=PWR.med,pch=20,xlab="frequency", ylab="",ylim=c(-0.4*max(PWR.upr), 1.25*max(PWR.upr)),yaxt="n", main="BFS Spectrum")
+    graphics::axis(side=2, at=YLAB)
+    graphics::mtext("Power", side=2, line=2.5, at=max(PWR.upr)/2)
 
-    lines(x=Frequency,y=PWR.med,type='l',col="gray")
+    graphics::lines(x=Frequency,y=PWR.med,type='l',col="gray")
     options(warn=-1)
-    arrows(x0=Frequency,y0=PWR.lwr,x1=Frequency,y1=PWR.upr,code=3,length=0.04,angle=90,col='black')
+    graphics::arrows(x0=Frequency,y0=PWR.lwr,x1=Frequency,y1=PWR.upr,code=3,length=0.04,angle=90,col='black')
     options(warn=0)
-    legend("topright", paste("Power with ", CI*100, "%CI",sep=""),lty=c(NA),pch=c(20),lwd=c(1), col="black",border="white")
-    par(new=TRUE)
-    plot(y=Probability*max(PWR.upr)*0.04,x=Frequency,pch=20,xlab="",ylab="",yaxt="n", ylim=c(0,max(PWR.upr)*0.2))
-    lines(y=Probability*max(PWR.upr)*0.04,x=Frequency,type='h',col='gray',xlab="",ylab="",yaxt="n", ylim=c(0,max(PWR.upr)*0.2))
-    axis(side=4, at=c(0,max(PWR.upr)*0.04),labels=c("0%","100%"))
-    mtext("Probability", side=4, line=2.5,at=max(PWR.upr)*0.04/2)
+    graphics::legend("topright", paste("Power with ", CI*100, "%CI",sep=""),lty=c(NA),pch=c(20),lwd=c(1), col="black",border="white")
+    graphics::par(new=TRUE)
+    graphics::plot(y=Probability*max(PWR.upr)*0.04,x=Frequency,pch=20,xlab="",ylab="",yaxt="n", ylim=c(0,max(PWR.upr)*0.2))
+    graphics::lines(y=Probability*max(PWR.upr)*0.04,x=Frequency,type='h',col='gray',xlab="",ylab="",yaxt="n", ylim=c(0,max(PWR.upr)*0.2))
+    graphics::axis(side=4, at=c(0,max(PWR.upr)*0.04),labels=c("0%","100%"))
+    graphics::mtext("Probability", side=4, line=2.5,at=max(PWR.upr)*0.04/2)
   }
 
-  ##########################################################################
+  # ----------------------------------------------------------------------------
   if(type=='cv') {
     if (sum(names(x)=="CVpred")<1){stop("Object does not contain cross validation")}
     PRED=apply(x$CVpred[BURN:dim(x$CVpred)[1],],2,'quantile',0.5)
     MAIN="Cross-Validation: One step out of sample predictions"
 
-    plot(x=x$y,y=PRED,xlab="Actual",ylab="Predicted", main=MAIN, pch=18)
-    abline(0,1,col='blue')
+    graphics::plot(x=x$y,y=PRED,xlab="Actual",ylab="Predicted", main=MAIN, pch=18)
+    graphics::abline(0,1,col='blue')
 
     RSQ=cor(x$y,PRED)^2* 100
 
     LAB = bquote(italic(R)^2 == .(paste(format(RSQ, digits = 0),"%",sep="")))
-    text(x=(min(x$y)+0.9*(max(x$y)-min(x$y))),y=(min(PRED)+0.1*(max(PRED)-min(PRED))),LAB)
+    graphics::text(x=(min(x$y)+0.9*(max(x$y)-min(x$y))),y=(min(PRED)+0.1*(max(PRED)-min(PRED))),LAB)
   }
 
-  #################################################################################
+  # ----------------------------------------------------------------------------
   if(type=='predTUTS') {
     if (sum(names(x)=="CVpred")<1){stop("Object does not contain cross validation")}
     PRED.LWR=apply(x$CVpred[BURN:dim(x$CVpred)[1],],2,'quantile',(1-CI)/2)
@@ -492,16 +496,16 @@ plot.tuts_poisBFS = function(x, type, ...) {
     ti.sim=apply(x$ti.sim[BURN:dim(x$ti.sim)[1],],2,'quantile',0.5)
 
     MAIN=paste("One step out of sample predictions at CI= ", CI*100,"%",sep='')
-    plot(y=x$y,x=x$ti.mu,type='l',main=MAIN,ylab="Observations",xlab='time',lwd=2,
+    graphics::plot(y=x$y,x=x$ti.mu,type='l',main=MAIN,ylab="Observations",xlab='time',lwd=2,
          ylim=c(min(x$CVpred),1.2*max(x$CVpred)), xlim=c(min(x$ti.mu,ti.sim),max(x$ti.mu,ti.sim)))
-    lines(y=PRED.LWR,x=ti.sim,type='l',col='blue',lwd=1,lty=2)
-    lines(y=PRED.MED,x=ti.sim,type='l',col='blue',lwd=1,lty=1)
-    lines(y=PRED.UPR,x=ti.sim,type='l',col='blue',lwd=1,lty=2)
+    graphics::lines(y=PRED.LWR,x=ti.sim,type='l',col='blue',lwd=1,lty=2)
+    graphics::lines(y=PRED.MED,x=ti.sim,type='l',col='blue',lwd=1,lty=1)
+    graphics::lines(y=PRED.UPR,x=ti.sim,type='l',col='blue',lwd=1,lty=2)
 
-    legend("topright",legend = c("Observed","Upper CI","Medium","Lower CI"),
+    graphics::legend("topright",legend = c("Observed","Upper CI","Medium","Lower CI"),
            col=c("black","blue","blue","blue"),lwd=c(2,1,1,1),lty=c(1,2,1,2))
   }
-  #################################################################################
+  # ----------------------------------------------------------------------------
   if(type=='GR') {
     if(burn>0){ABURNIN=TRUE} else{ABURNIN=FALSE}
 
@@ -521,27 +525,27 @@ plot.tuts_poisBFS = function(x, type, ...) {
       GELMAN.PN[i,3]=i
     }
 
-    par(mfrow=c(4,1))
-    plot(y=GELMAN.PN[1,1], x=GELMAN.PN[1,3],ylim=c(0,max(GELMAN.PN[,1:2])),xlim=c(1,(dim(GELMAN.PN)[1]))
+    graphics::par(mfrow=c(4,1))
+    graphics::plot(y=GELMAN.PN[1,1], x=GELMAN.PN[1,3],ylim=c(0,max(GELMAN.PN[,1:2])),xlim=c(1,(dim(GELMAN.PN)[1]))
          ,xaxt='n',ylab="Factor",  xlab="Parameters of polynomial regression and precision of the model",
          main=paste("Gelman-Rubin diagnostics: Potential scale reduction factors \n with the upper confidence bounds at ",
                     CI*100,"%",sep=""))
     for(i in 2:dim(GELMAN.PN)[1]){
-      points(x=GELMAN.PN[i,3],y=GELMAN.PN[i,1])
+      graphics::points(x=GELMAN.PN[i,3],y=GELMAN.PN[i,1])
     }
 
     for(i in 1:dim(GELMAN.PN)[1]){
-      arrows(x0=GELMAN.PN[i,3],
+      graphics::arrows(x0=GELMAN.PN[i,3],
              y0=GELMAN.PN[i,1],
              x1=GELMAN.PN[i,3],
              y1=GELMAN.PN[i,2],
              code=3,length=0.04,angle=90,col='darkgray')
     }
-    text(x=seq(1,length(PN_Objects),by=1),y=-max(GELMAN.PN[,1:2])/7, srt = 00, adj= 0.5, xpd = TRUE, labels =PN_Objects, cex=0.65)
-    legend("topright", c("Estimate"),lty=c(NA),pch=c(1),lwd=c(1), col=c("black"),border="white")
-    abline(h=1);
+    graphics::text(x=seq(1,length(PN_Objects),by=1),y=-max(GELMAN.PN[,1:2])/7, srt = 00, adj= 0.5, xpd = TRUE, labels =PN_Objects, cex=0.65)
+    graphics::legend("topright", c("Estimate"),lty=c(NA),pch=c(1),lwd=c(1), col=c("black"),border="white")
+    graphics::abline(h=1);
 
-    ##############
+    # ----------------------------------------------------------------------------
     par_to_use = grep('Spectrum',colnames(x$JAGS[[1]]))
     GELMAN.SPC <- matrix(NA, nrow=length(par_to_use), ncol=3)
     for (v in 1:length(par_to_use)) {
@@ -549,23 +553,23 @@ plot.tuts_poisBFS = function(x, type, ...) {
       GELMAN.SPC[v,3] <- v
     }
     GELMAN.SPC[is.na(GELMAN.SPC)]=1
-    plot(GELMAN.SPC[,1], xlab="Power estimates", xaxt='n',ylab="Factor",
+    graphics::plot(GELMAN.SPC[,1], xlab="Power estimates", xaxt='n',ylab="Factor",
          ylim=c(0,max(GELMAN.SPC[,1:2])),xlim=c(1,(dim(GELMAN.SPC)[1])))
 
     for(i in 1:dim(GELMAN.SPC)[1]){
-      arrows(x0=GELMAN.SPC[i,3],
+      graphics::arrows(x0=GELMAN.SPC[i,3],
              y0=GELMAN.SPC[i,1],
              x1=GELMAN.SPC[i,3],
              y1=GELMAN.SPC[i,2],
              code=3,length=0.04,angle=90,col='darkgray')
     }
-    legend("topright", c("Estimate"),lty=c(NA),pch=c(1),lwd=c(1), col=c("black"),border="white")
-    abline(h=1)
+    graphics::legend("topright", c("Estimate"),lty=c(NA),pch=c(1),lwd=c(1), col=c("black"),border="white")
+    graphics::abline(h=1)
 
-    text(x=seq(1,dim(GELMAN.SPC)[1],by=1),y=-max(GELMAN.SPC[,1:2]) /2.5, srt = 00, adj= 0.5, xpd = TRUE, srt = 90,
+    graphics::text(x=seq(1,dim(GELMAN.SPC)[1],by=1),y=-max(GELMAN.SPC[,1:2]) /2.5, srt = 00, adj= 0.5, xpd = TRUE, srt = 90,
          labels =paste("Pwr",1:dim(GELMAN.SPC)[1]), cex=0.65)
 
-    ###############
+    # ----------------------------------------------------------------------------
     par_to_use = grep('ti.sim',colnames(x$JAGS[[1]]))
     GELMAN.TIS <- matrix(NA, nrow=length(par_to_use), ncol=3)
     for (v in 1:length(par_to_use)) {
@@ -573,22 +577,22 @@ plot.tuts_poisBFS = function(x, type, ...) {
       GELMAN.TIS[v,3] <- v
     }
     GELMAN.TIS[is.na(GELMAN.TIS)]=1
-    plot(GELMAN.TIS[,1], xlab="Estimated timings of observations", xaxt='n',ylab="Factor",
+    graphics::plot(GELMAN.TIS[,1], xlab="Estimated timings of observations", xaxt='n',ylab="Factor",
          ylim=c(0,max(GELMAN.TIS[,1:2])),xlim=c(1,(dim(GELMAN.TIS)[1])))
 
     for(i in 1:dim(GELMAN.TIS)[1]){
-      arrows(x0=GELMAN.TIS[i,3],
+      graphics::arrows(x0=GELMAN.TIS[i,3],
              y0=GELMAN.TIS[i,1],
              x1=GELMAN.TIS[i,3],
              y1=GELMAN.TIS[i,2],
              code=3,length=0.04,angle=90,col='darkgray')
     }
-    abline(h=1)
-    text(x=seq(1,dim(GELMAN.TIS)[1],by=1),y=-max(GELMAN.TIS[,1:2])/2, srt = 00, adj= 0.5, xpd = TRUE,srt = 90,
+    graphics::abline(h=1)
+    graphics::text(x=seq(1,dim(GELMAN.TIS)[1],by=1),y=-max(GELMAN.TIS[,1:2])/2, srt = 00, adj= 0.5, xpd = TRUE,srt = 90,
          labels =paste("t.sim",1:dim(GELMAN.TIS)[1]), cex=0.65)
-    legend("topright", c("Estimate"),lty=c(NA),pch=c(1),lwd=c(1), col=c("black"),border="white")
+    graphics::legend("topright", c("Estimate"),lty=c(NA),pch=c(1),lwd=c(1), col=c("black"),border="white")
 
-    ###############
+    # ----------------------------------------------------------------------------
     par_to_use = grep('lambda',colnames(x$JAGS[[1]]))
     GELMAN.TIS <- matrix(NA, nrow=length(par_to_use), ncol=3)
     for (v in 1:length(par_to_use)) {
@@ -596,23 +600,23 @@ plot.tuts_poisBFS = function(x, type, ...) {
       GELMAN.TIS[v,3] <- v
     }
     GELMAN.TIS[is.na(GELMAN.TIS)]=1
-    plot(GELMAN.TIS[,1], xlab="Estimates of lambda", xaxt='n',ylab="Factor",
+    graphics::plot(GELMAN.TIS[,1], xlab="Estimates of lambda", xaxt='n',ylab="Factor",
          ylim=c(0,max(GELMAN.TIS[,1:2])),xlim=c(1,(dim(GELMAN.TIS)[1])))
 
     for(i in 1:dim(GELMAN.TIS)[1]){
-      arrows(x0=GELMAN.TIS[i,3],
+      graphics::arrows(x0=GELMAN.TIS[i,3],
              y0=GELMAN.TIS[i,1],
              x1=GELMAN.TIS[i,3],
              y1=GELMAN.TIS[i,2],
              code=3,length=0.04,angle=90,col='darkgray')
     }
-    abline(h=1)
-    text(x=seq(1,dim(GELMAN.TIS)[1],by=1),y=-max(GELMAN.TIS[,1:2])/2, srt = 00, adj= 0.5, xpd = TRUE,srt = 90,
+    graphics::abline(h=1)
+    graphics::text(x=seq(1,dim(GELMAN.TIS)[1],by=1),y=-max(GELMAN.TIS[,1:2])/2, srt = 00, adj= 0.5, xpd = TRUE,srt = 90,
          labels =paste("lambda",1:dim(GELMAN.TIS)[1]), cex=0.65)
-    legend("topright", c("Estimate"),lty=c(NA),pch=c(1),lwd=c(1), col=c("black"),border="white")
-    #############
-    par(mfrow=c(1,1))
+    graphics::legend("topright", c("Estimate"),lty=c(NA),pch=c(1),lwd=c(1), col=c("black"),border="white")
+    graphics::par(mfrow=c(1,1))
   }
+  # ----------------------------------------------------------------------------
   if(type=='lambda') {
     lambda=x$lambda[BURN:dim(x$lambda)[1],]
     lambda.lwr=apply(lambda,2,'quantile',(1-CI)/2)
@@ -622,22 +626,23 @@ plot.tuts_poisBFS = function(x, type, ...) {
 
     ti.sim=apply(x$ti.sim[BURN:dim(x$ti.sim)[1],],2,'quantile',0.5)
 
-    plot(x=ti.sim,y=lambda.med,type='l', xlab='Sim ID',ylab='lambda',main='lambda')
+    graphics::plot(x=ti.sim,y=lambda.med,type='l', xlab='Sim ID',ylab='lambda',main='lambda')
 
     MAIN=paste("Realizations of lambda with CI= ", CI*100,"%",sep='')
-    plot(y=lambda.med,x=ti.sim,type='l',main=MAIN,ylab="Level",xlab='time',lwd=1,lty=1,
+    graphics::plot(y=lambda.med,x=ti.sim,type='l',main=MAIN,ylab="Level",xlab='time',lwd=1,lty=1,
          ylim=c(min(lambda),1.2*max(lambda)), xlim=c(min(x$ti.mu,ti.sim),max(x$ti.mu,ti.sim)))
 
-    lines(y=lambda.lwr,x=ti.sim,type='l',col='blue',lwd=1,lty=2)
-    lines(y=lambda.upr,x=ti.sim,type='l',col='blue',lwd=1,lty=2)
+    graphics::lines(y=lambda.lwr,x=ti.sim,type='l',col='blue',lwd=1,lty=2)
+    graphics::lines(y=lambda.upr,x=ti.sim,type='l',col='blue',lwd=1,lty=2)
 
-    legend("topright",legend = c("Upper CI","Medium","Lower CI"),
+    graphics::legend("topright",legend = c("Upper CI","Medium","Lower CI"),
            col=c("blue","black","blue"),lwd=c(1,1,1),lty=c(2,1,2))
 
 
 
   }
-  if(type=='mcmc') {
+  # ----------------------------------------------------------------------------
+    if(type=='mcmc') {
 
     ALL_Objects=names(x)
     Remove=c("Ind","const","Spectrum", "beta","freqs","JAGS","DIC","y","polyorder","ti.mu","CVpred",

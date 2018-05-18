@@ -1,6 +1,6 @@
-#' Time-uncertain polynomial regression of counting series
+#' Time-uncertain polynomial regression of counting time series
 #'
-#' \code{tupoispn}  poisson polynomial regression of the N-th order of time-uncertain time series.
+#' \code{tupoispn} poisson polynomial regression of the N-th order of time-uncertain time series.
 #'
 #' @param y A vector of observations.
 #' @param ti.mu A vector of estimates of timing of observations.
@@ -8,36 +8,39 @@
 #' @param polyorder Order of the polynomial regression.
 #' @param n.sim A number of simulations.
 #' @param CV cross-validation indicator.
-#' @param ... A list of optional parameters. The list contains polynomial order with the default value
-#' set to polyorder=3, thinning parameter, with the default value set to Thin=4,
-#' and the number of mcmc chains with the default value set to n.chains=2.
+#' @param ... optional arguments: \cr
+#' - n.chains: number of MCMC chains, the default number of chains is set to 2.\cr
+#' - Thin: thinning factor, the default values is set to 4.\cr
+#' - polyorder: order of the polynomial regression, the default odrer is set to 3. \cr
 #'
-#' @examples
-#' # Import or simulate the data (simulation is chosen for illustrative purposes):
-#' DATA=simtuts(N=50,Harmonics=c(10,30,0), sin.ampl=c(10,10, 0), cos.ampl=c(0,0,0), trend=0,y.sd=3, ti.sd=1)
+#'@examples
+#' \donttest{
+#' #1. Import or simulate the data (a simulation is chosen for illustrative purposes):
+#' DATA=simtuts(N=50,Harmonics=c(10,30,0), sin.ampl=c(10,10, 0), cos.ampl=c(0,0,0),
+#'              trend=0,y.sd=3, ti.sd=1)
 #' y=DATA$observed$y.obs
 #' y=round(y-min(y))
 #' ti.mu=DATA$observed$ti.obs.tnorm
 #' ti.sd= rep(1, length(ti.mu))
 #'
-#' # Set parameters and run the polynomial regression of counting series:
+#' #2. Fit the model:
 #' polyorder=2
 #' n.sim=1000
 #' PPN=tupoispn(y=y,ti.mu=ti.mu,ti.sd=ti.sd,polyorder=polyorder,n.sim=n.sim, CV=TRUE)
 #'
-#' # Generate summary results (optional parameters are listed in brackets):
-#' summary(PPN)                           # Summary statistics (burn, CI).
+#' #3. Generate summary results (optional parameters are listed in brackets):
+#' summary(PPN)                           # Summary results (burn, CI).
 #'
-#' # Plots and diagnostics (optional parameters are listed in brackets):
-#' plot(PPN,type='predTUTS',CI=0.95)      # One step out of salmple predictions of the model (CI, burn).
-#' plot(PPN,type='cv',burn=0.3)           # 5 fold cross-validation (CI, burn).
-#' plot(PPN,type='GR',CI=0.95)            # Gelman-Rubin diagnostic (CI).
-#' plot(PPN,type='mcmc')                  # MCMC diagnostics.
-#' plot(PPN,type='lambda')                # Volatility realizaitons.
-#'
+#' #4. Generate plots and diagnostics of the model (optional parameters are listed in brackets):
+#' plot(PPN,type='predTUTS',CI=0.95)   # One step out of salmple predictions (CI, burn).
+#' plot(PPN,type='cv',burn=0.3)        # 5 fold cross-validation (CI, burn).
+#' plot(PPN,type='GR',CI=0.95)         # Gelman-Rubin diagnostic (CI).
+#' plot(PPN,type='mcmc')               # MCMC diagnostics.
+#' plot(PPN,type='lambda')             # Volatility realizaitons.
+#' }
 #' @export
 #'
-tupoispn=function(y,ti.mu,ti.sd, n.sim, CV=FALSE, ... ){
+tupoispn=function(y,ti.mu,ti.sd, n.sim, polyorder=3, CV=FALSE, ... ){
 # Data checking and basic operations ---------------------------------------------------------------------
 if (length(y)*4!=length(ti.mu)*2+length(ti.sd)*2){stop("Vectors y, ti.mu and ti.sd should be of equal lengths.")}
 if(is.numeric(y)==FALSE ){stop("y must be a vector of rational numbers.")}
@@ -99,12 +102,12 @@ const~dnorm(0,0.01)
 # JAGS data ---------------------------------------------------------------------------------------------
 data=list(y=y, ti.mu=ti.mu,ti.sd=ti.sd, n=length(ti.mu),polyorder=polyorder)
 
-init=parallel.seeds("base::BaseRNG", n.chains)
+inits=parallel.seeds("base::BaseRNG", n.chains)
 for(k in (1:n.chains)){
-  init[[k]]$ti.sim.tmp=ti.mu
+  inits[[k]]$ti.sim.tmp=ti.mu
 }
 
-model=jags.model(textConnection(modelstring), data=data, init=init,n.chains=n.chains)
+model=jags.model(textConnection(modelstring), data=data, inits=inits,n.chains=n.chains)
 update(model,n.iter=n.sim,thin=Thin)
 
 output=coda.samples(model=model, variable.names=c("lambda","const","alpha","ti.sim")
@@ -158,33 +161,36 @@ class(Sim.Objects)='tuts_poisPN'
 return(Sim.Objects)
 }
 
-#' Prints summaries of tuts_poisPN objects.
+#' Prints summaries of tuts_poisPN objects
 #'
-#' \code{summary.tuts_poisPN} Prints summaries of tuts_poisPN objects.
+#' \code{summary.tuts_poisPN} prints summaries of tuts_poisPN objects.
 #'
-#' @param x A tuts_poisPN object.
+#' @param object A tuts_poisPN object.
 #' @param ... list of optional parameters. The list contains burn-in parameter
 #' ranging from 0 to 0.5, with the default value burn=0, and the credible interval parameter
 #' ranging between 0.5 and 1, with the default CI=0.99.
 #'
-#' @examples
-#' # Import or simulate the data (simulation is chosen for illustrative purposes):
-#' DATA=simtuts(N=50,Harmonics=c(10,30,0), sin.ampl=c(10,10, 0), cos.ampl=c(0,0,0), trend=0,y.sd=3, ti.sd=1)
+#'@examples
+#' \donttest{
+#' #1. Import or simulate the data (a simulation is chosen for illustrative purposes):
+#' DATA=simtuts(N=50,Harmonics=c(10,30,0), sin.ampl=c(10,10, 0), cos.ampl=c(0,0,0),
+#'              trend=0,y.sd=3, ti.sd=1)
 #' y=DATA$observed$y.obs
 #' y=round(y-min(y))
 #' ti.mu=DATA$observed$ti.obs.tnorm
 #' ti.sd= rep(1, length(ti.mu))
 #'
-#' # Set parameters and run the polynomial regression of counting series:
+#' #2. Fit the model:
 #' polyorder=2
 #' n.sim=1000
 #' PPN=tupoispn(y=y,ti.mu=ti.mu,ti.sd=ti.sd,polyorder=polyorder,n.sim=n.sim, CV=TRUE)
 #'
-#' # Generate summary results (optional parameters are listed in brackets):
-#' summary(PPN)                           # Summary statistics (burn, CI).
+#' #3. Generate summary results (optional parameters are listed in brackets):
+#' summary(PPN)                           # Summary results (burn, CI).
 #'
+#' }
 #' @export
-summary.tuts_poisPN = function(x, ...) {
+summary.tuts_poisPN = function(object, ...) {
   dots = list(...)
   if(missing(...)){burn=0; CI=0.99}
 
@@ -202,7 +208,7 @@ summary.tuts_poisPN = function(x, ...) {
     if(burn<0 | burn>0.7){stop('burn is bounded between 0 and 0.7')
     }
   }
-  n.sim=dim(x$const)[1]
+  n.sim=dim(object$const)[1]
   if (burn==0){BURN=1}else{BURN=floor(burn*n.sim)}
 
   # ----------------------------------------------------------------------------
@@ -210,27 +216,27 @@ summary.tuts_poisPN = function(x, ...) {
   cat('Regression Parameters and estimates of timing:\n')
   cat('----------------------------------------------\n')
 
-  const=x$const[BURN:length(x$const)]
+  const=object$const[BURN:length(object$const)]
   const.lwr=quantile(const,(1-CI)/2)
   const.med=quantile(const,0.5)
   const.upr=quantile(const,1-(1-CI)/2)
   constName="const"
 
   lwr=med=upr=NAMES=NA
-  polyorder=x$polyorder
-  alpha=x$alpha[BURN:dim(x$alpha)[1],]
+  polyorder=object$polyorder
+  alpha=object$alpha[BURN:dim(object$alpha)[1],]
   alpha.lwr=apply(alpha,2,'quantile',(1-CI)/2)
   alpha.med=apply(alpha,2,'quantile',0.5)
   alpha.upr=apply(alpha,2,'quantile', 1-(1-CI)/2)
   alphaNames=colnames(alpha)
 
-  lambda=x$lambda[BURN:dim(x$lambda)[1],]
+  lambda=object$lambda[BURN:dim(object$lambda)[1],]
   lambda.lwr=apply(lambda,2,'quantile',(1-CI)/2)
   lambda.med=apply(lambda,2,'quantile',0.5)
   lambda.upr=apply(lambda,2,'quantile',1-(1-CI)/2)
   lambdaNames=names(lambda.med)
 
-  ti=x$ti.sim[BURN:dim(x$ti.sim)[1],]
+  ti=object$ti.sim[BURN:dim(object$ti.sim)[1],]
   ti.lwr=apply(ti,2,'quantile',(1-CI)/2)
   ti.med=apply(ti,2,'quantile',0.5)
   ti.upr=apply(ti,2,'quantile',1-(1-CI)/2)
@@ -248,41 +254,47 @@ summary.tuts_poisPN = function(x, ...) {
   cat('\n')
   cat('Deviance information criterion:\n')
   cat('-------------------------------\n')
-  print(x$DIC)
+  print(object$DIC)
   cat('-------------------------------\n')
 }
 ####################################################################################################
 #' Graphical summaries and diagnostics of tuts_poisPN objects
 #'
-#' \code{plot.tuts_poisPN} plots summaries and diagnostics of a tuts_poisPN object.
+#' \code{plot.tuts_poisPN} plots summaries and diagnostics of tuts_poisPN objects.
 #'
 #' @param x A tuts_poisPN object.
-#' @param type plot/diagnostic type (options:'predTUTS' plots one step out of sample predictions of the model,
-#' 'GR' plots Gelman-Rubin diagnostics, 'cv' plots 5-fold cross validation, 'mcmc' plots diagnostics
-#'  of mcmc objects, and 'lambda' plots lambda realizations).
-#' @param ... list of optional parameters: 'burn' (burn-in parameter ranging from 0 to 0.7 with
-#'  default value set to 0), and CI (credible interval ranging from 0.3 to 1 with
-#'  default value set to 0.95).
+#' @param type plot type with the following options:\cr
+#'  - 'predTUTS' plots one step predictions of the model. \cr
+#'  - 'GR' plots Gelman-Rubin diagnostics. \cr
+#'  - 'cv' plots 5-fold cross validation. \cr
+#'  - 'mcmc' plots diagnostics of MCMC/JAGS objects. \cr
+#'  - 'volatility' plots volatility realizations. \cr
+#' @param ... list of optional parameters:\cr
+#'  - burn: burn-in parameter ranging from 0 to 0.7 with default value set to 0. \cr
+#'  - CI: credible interval ranging from 0.3 to 1 with default value set to 0.95.
 #'
-#' @examples
-#' # Import or simulate the data (simulation is chosen for illustrative purposes):
-#' DATA=simtuts(N=50,Harmonics=c(10,30,0), sin.ampl=c(10,10, 0), cos.ampl=c(0,0,0), trend=0,y.sd=3, ti.sd=1)
+#'@examples
+#' \donttest{
+#' #1. Import or simulate the data (a simulation is chosen for illustrative purposes):
+#' DATA=simtuts(N=50,Harmonics=c(10,30,0), sin.ampl=c(10,10, 0), cos.ampl=c(0,0,0),
+#'              trend=0,y.sd=3, ti.sd=1)
 #' y=DATA$observed$y.obs
 #' y=round(y-min(y))
 #' ti.mu=DATA$observed$ti.obs.tnorm
 #' ti.sd= rep(1, length(ti.mu))
 #'
-#' # Set parameters and run the polynomial regression of counting series:
+#' #2. Fit the model:
 #' polyorder=2
 #' n.sim=1000
 #' PPN=tupoispn(y=y,ti.mu=ti.mu,ti.sd=ti.sd,polyorder=polyorder,n.sim=n.sim, CV=TRUE)
 #'
-#' # Plots and diagnostics (optional parameters are listed in brackets):
-#' plot(PPN,type='predTUTS',CI=0.95)      # One step out of salmple predictions of the model (CI, burn).
-#' plot(PPN,type='cv',burn=0.3)           # 5 fold cross-validation (CI, burn).
-#' plot(PPN,type='GR',CI=0.95)            # Gelman-Rubin diagnostic (CI).
-#' plot(PPN,type='mcmc')                  # MCMC diagnostics.
-#' plot(PPN,type='lambda')                # Volatility realizaitons.
+#' #3. Generate plots and diagnostics of the model (optional parameters are listed in brackets):
+#' plot(PPN,type='predTUTS',CI=0.95)   # One step out of salmple predictions (CI, burn).
+#' plot(PPN,type='cv',burn=0.3)        # 5 fold cross-validation (CI, burn).
+#' plot(PPN,type='GR',CI=0.95)         # Gelman-Rubin diagnostic (CI).
+#' plot(PPN,type='mcmc')               # MCMC diagnostics.
+#' plot(PPN,type='lambda')             # Volatility realizaitons.
+#' }
 #'
 #' @export
 plot.tuts_poisPN = function(x, type, ...) {
@@ -310,22 +322,22 @@ plot.tuts_poisPN = function(x, type, ...) {
   n.sim=dim(x$const)[1]
   if (burn==0){BURN=1}else{BURN=floor(burn*n.sim)}
 
-  par(mfrow=c(1,1))
-  ##########################################################################
+  graphics::par(mfrow=c(1,1))
+  # ----------------------------------------------------------------------------
   if(type=='cv') {
     if (sum(names(x)=="CVpred")<1){stop("Object does not contain cross validation")}
     PRED=apply(x$CVpred[BURN:dim(x$CVpred)[1],],2,'quantile',0.5)
     MAIN="Cross-Validation: One step out of sample predictions"
 
-    plot(x=x$y,y=PRED,xlab="Actual",ylab="Predicted", main=MAIN, pch=18)
-    abline(0,1,col='blue')
+    graphics::plot(x=x$y,y=PRED,xlab="Actual",ylab="Predicted", main=MAIN, pch=18)
+    graphics::abline(0,1,col='blue')
 
     RSQ=cor(x$y,PRED)^2* 100
 
     LAB = bquote(italic(R)^2 == .(paste(format(RSQ, digits = 0),"%",sep="")))
-    text(x=(min(x$y)+0.9*(max(x$y)-min(x$y))),y=(min(PRED)+0.1*(max(PRED)-min(PRED))),LAB)
+    graphics::text(x=(min(x$y)+0.9*(max(x$y)-min(x$y))),y=(min(PRED)+0.1*(max(PRED)-min(PRED))),LAB)
   }
-  ##########################################################################
+  # ----------------------------------------------------------------------------
   if(type=='predTUTS') {
     if (sum(names(x)=="CVpred")<1){stop("Object does not contain cross validation")}
     PRED.LWR=apply(x$CVpred[BURN:dim(x$CVpred)[1],],2,'quantile',(1-CI)/2)
@@ -335,18 +347,18 @@ plot.tuts_poisPN = function(x, type, ...) {
     ti.sim=c(x$ti.mu[1],apply(x$ti.sim[BURN:dim(x$ti.sim)[1],],2,'quantile',0.5))
 
     MAIN=paste("One step out of sample predictions at CI= ", CI*100,"%",sep='')
-    plot(y=x$y,x=x$ti.mu,type='l',main=MAIN,ylab="Observations",xlab='time',
+    graphics::plot(y=x$y,x=x$ti.mu,type='l',main=MAIN,ylab="Observations",xlab='time',
          ylim=c(min(x$CVpred),1.2*max(x$CVpred)), xlim=c(min(x$ti.mu,ti.sim),
                                                          max(x$ti.mu,ti.sim)),lwd=2)
-    lines(y=PRED.LWR,x=ti.sim[2:length(ti.sim)],type='l',col='blue',lwd=1,lty=2)
-    lines(y=PRED.MED,x=ti.sim[2:length(ti.sim)],type='l',col='blue',lwd=1,lty=1)
-    lines(y=PRED.UPR,x=ti.sim[2:length(ti.sim)],type='l',col='blue',lwd=1,lty=2)
+    graphics::lines(y=PRED.LWR,x=ti.sim[2:length(ti.sim)],type='l',col='blue',lwd=1,lty=2)
+    graphics::lines(y=PRED.MED,x=ti.sim[2:length(ti.sim)],type='l',col='blue',lwd=1,lty=1)
+    graphics::lines(y=PRED.UPR,x=ti.sim[2:length(ti.sim)],type='l',col='blue',lwd=1,lty=2)
 
 
-    legend("topright",legend = c("Observed","Upper CI","Medium","Lower CI"),
+    graphics::legend("topright",legend = c("Observed","Upper CI","Medium","Lower CI"),
            col=c("black","blue","blue","blue"),lwd=c(2,1,1,1),lty=c(1,2,1,2))
   }
-  #################################################################################
+  # ----------------------------------------------------------------------------
   if(type=='GR') {
     if(burn>0){ABURNIN=TRUE} else{ABURNIN=FALSE}
 
@@ -367,28 +379,27 @@ plot.tuts_poisPN = function(x, type, ...) {
       GELMAN.PN[i,3]=i
     }
 
-    par(mfrow=c(3,1))
-    plot(y=GELMAN.PN[1,1], x=GELMAN.PN[1,3],ylim=c(0,max(GELMAN.PN[,1:2])),xlim=c(1,(dim(GELMAN.PN)[1]))
+    graphics::par(mfrow=c(3,1))
+    graphics::plot(y=GELMAN.PN[1,1], x=GELMAN.PN[1,3],ylim=c(0,max(GELMAN.PN[,1:2])),xlim=c(1,(dim(GELMAN.PN)[1]))
          ,xaxt='n',ylab="Factor",  xlab="Parameters of polynomial regression",
          main=paste("Gelman-Rubin diagnostics: Potential scale reduction factors \n with the upper confidence bounds at ",
                     CI*100,"%",sep=""))
     for(i in 2:dim(GELMAN.PN)[1]){
-      points(x=GELMAN.PN[i,3],y=GELMAN.PN[i,1])
+      graphics::points(x=GELMAN.PN[i,3],y=GELMAN.PN[i,1])
     }
 
     for(i in 1:dim(GELMAN.PN)[1]){
-      arrows(x0=GELMAN.PN[i,3],
+      graphics::arrows(x0=GELMAN.PN[i,3],
              y0=GELMAN.PN[i,1],
              x1=GELMAN.PN[i,3],
              y1=GELMAN.PN[i,2],
              code=3,length=0.04,angle=90,col='darkgray')
     }
-    text(x=seq(1,length(PN_Objects),by=1),y=-max(GELMAN.PN[,1:2])/7, srt = 00, adj= 0.5, xpd = TRUE, labels =PN_Objects, cex=0.65)
-    legend("topright", c("Estimate"),lty=c(NA),pch=c(1),lwd=c(1), col=c("black"),border="white")
-    abline(h=1);
+    graphics::text(x=seq(1,length(PN_Objects),by=1),y=-max(GELMAN.PN[,1:2])/7, srt = 00, adj= 0.5, xpd = TRUE, labels =PN_Objects, cex=0.65)
+    graphics::legend("topright", c("Estimate"),lty=c(NA),pch=c(1),lwd=c(1), col=c("black"),border="white")
+    graphics::abline(h=1);
 
-    ##############
-    ###############
+    # ----------------------------------------------------------------------------
     par_to_use = grep('ti.sim',colnames(x$JAGS[[1]]))
     GELMAN.TIS <- matrix(NA, nrow=length(par_to_use), ncol=3)
     for (v in 1:length(par_to_use)) {
@@ -396,22 +407,22 @@ plot.tuts_poisPN = function(x, type, ...) {
       GELMAN.TIS[v,3] <- v
     }
     GELMAN.TIS[is.na(GELMAN.TIS)]=1
-    plot(GELMAN.TIS[,1], xlab="Estimated timings of observations", xaxt='n',ylab="Factor",
+    graphics::plot(GELMAN.TIS[,1], xlab="Estimated timings of observations", xaxt='n',ylab="Factor",
          ylim=c(0,max(GELMAN.TIS[,1:2])),xlim=c(1,(dim(GELMAN.TIS)[1])))
 
     for(i in 1:dim(GELMAN.TIS)[1]){
-      arrows(x0=GELMAN.TIS[i,3],
+      graphics::arrows(x0=GELMAN.TIS[i,3],
              y0=GELMAN.TIS[i,1],
              x1=GELMAN.TIS[i,3],
              y1=GELMAN.TIS[i,2],
              code=3,length=0.04,angle=90,col='darkgray')
     }
-    abline(h=1)
-    text(x=seq(1,dim(GELMAN.TIS)[1],by=1),y=-max(GELMAN.TIS[,1:2])/2, srt = 00, adj= 0.5, xpd = TRUE,srt = 90,
+    graphics::abline(h=1)
+    graphics::text(x=seq(1,dim(GELMAN.TIS)[1],by=1),y=-max(GELMAN.TIS[,1:2])/2, srt = 00, adj= 0.5, xpd = TRUE,srt = 90,
          labels =paste("t.sim",1:dim(GELMAN.TIS)[1]), cex=0.65)
-    legend("topright", c("Estimate"),lty=c(NA),pch=c(1),lwd=c(1), col=c("black"),border="white")
+    graphics::legend("topright", c("Estimate"),lty=c(NA),pch=c(1),lwd=c(1), col=c("black"),border="white")
 
-    ###############
+    # ----------------------------------------------------------------------------
     par_to_use = grep('lambda',colnames(x$JAGS[[1]]))
     GELMAN.TIS <- matrix(NA, nrow=length(par_to_use), ncol=3)
     for (v in 1:length(par_to_use)) {
@@ -419,23 +430,24 @@ plot.tuts_poisPN = function(x, type, ...) {
       GELMAN.TIS[v,3] <- v
     }
     GELMAN.TIS[is.na(GELMAN.TIS)]=1
-    plot(GELMAN.TIS[,1], xlab="Estimates of lambda", xaxt='n',ylab="Factor",
+    graphics::plot(GELMAN.TIS[,1], xlab="Estimates of lambda", xaxt='n',ylab="Factor",
          ylim=c(0,max(GELMAN.TIS[,1:2])),xlim=c(1,(dim(GELMAN.TIS)[1])))
 
     for(i in 1:dim(GELMAN.TIS)[1]){
-      arrows(x0=GELMAN.TIS[i,3],
+      graphics::arrows(x0=GELMAN.TIS[i,3],
              y0=GELMAN.TIS[i,1],
              x1=GELMAN.TIS[i,3],
              y1=GELMAN.TIS[i,2],
              code=3,length=0.04,angle=90,col='darkgray')
     }
-    abline(h=1)
-    text(x=seq(1,dim(GELMAN.TIS)[1],by=1),y=-max(GELMAN.TIS[,1:2])/2, srt = 00, adj= 0.5, xpd = TRUE,srt = 90,
+    graphics::abline(h=1)
+    graphics::text(x=seq(1,dim(GELMAN.TIS)[1],by=1),y=-max(GELMAN.TIS[,1:2])/2, srt = 00, adj= 0.5, xpd = TRUE,srt = 90,
          labels =paste("lambda",1:dim(GELMAN.TIS)[1]), cex=0.65)
-    legend("topright", c("Estimate"),lty=c(NA),pch=c(1),lwd=c(1), col=c("black"),border="white")
+    graphics::legend("topright", c("Estimate"),lty=c(NA),pch=c(1),lwd=c(1), col=c("black"),border="white")
 
-    par(mfrow=c(1,1))
+    graphics::par(mfrow=c(1,1))
   }
+  # ----------------------------------------------------------------------------
   if(type=='lambda') {
     lambda=x$lambda[BURN:dim(x$lambda)[1],]
     lambda.lwr=apply(lambda,2,'quantile',(1-CI)/2)
@@ -445,19 +457,18 @@ plot.tuts_poisPN = function(x, type, ...) {
 
     ti.sim=apply(x$ti.sim[BURN:dim(x$ti.sim)[1],],2,'quantile',0.5)
 
-    #plot(x=ti.sim,y=lambda.med,type='l', xlab='Sim ID',ylab='lambda',main='lambda')
-
     MAIN=paste("Realizations of lambda with CI= ", CI*100,"%",sep='')
-    plot(y=lambda.med,x=ti.sim,type='l',main=MAIN,ylab="Level",xlab='time',lwd=1,lty=1,
+    graphics::plot(y=lambda.med,x=ti.sim,type='l',main=MAIN,ylab="Level",xlab='time',lwd=1,lty=1,
          ylim=c(min(lambda),1.2*max(lambda)), xlim=c(min(x$ti.mu,ti.sim),max(x$ti.mu,ti.sim)))
 
-    lines(y=lambda.lwr,x=ti.sim,type='l',col='blue',lwd=1,lty=2)
-    lines(y=lambda.upr,x=ti.sim,type='l',col='blue',lwd=1,lty=2)
+    graphics::lines(y=lambda.lwr,x=ti.sim,type='l',col='blue',lwd=1,lty=2)
+    graphics::lines(y=lambda.upr,x=ti.sim,type='l',col='blue',lwd=1,lty=2)
 
-    legend("topright",legend = c("Upper CI","Medium","Lower CI"),
+    graphics::legend("topright",legend = c("Upper CI","Medium","Lower CI"),
            col=c("blue","black","blue"),lwd=c(1,1,1),lty=c(2,1,2))
 
   }
+  # ----------------------------------------------------------------------------
   if(type=='mcmc') {
     mcmcplot(x$JAGS)
   }
