@@ -1,39 +1,41 @@
-#' Spectral analysis of time-uncertain time series using Lomb-Scargle periodogram
+#' Spectral analysis of time-uncertain time series using Lomb-Scargle method
 #'
 #' \code{tuls} computes multiple power estimates using the Lomb-Scargle algorithm and simulated realizations of
-#' timings of observations. Timings are simulated with normal distribution \emph{ti~N(ti.mu,ti.sd)},
+#' uncorrelated timings of observations. Timings are simulated with normal distribution \emph{ti~N(ti.mu,ti.sd)},
 #' and sorted in ascending order to ensure non-overlapping feature of observations.
 #'
 #' @param y A vector of observations.
 #' @param ti.mu A vector of estimates of timings of observations.
 #' @param ti.sd A vector of standard deviations of timings.
 #' @param n.sim A number of simulations.
-#' @param ... A list of optional parameters. The list contains thinning oversamlping parameter,
-#' the default value is ofac=4, confidence interval, the default value is CI=0.99, and the number
-#'  of simulated timings, wiith the default vale set to n.sim=1000.
+#' @param ... list of optional parameters: \cr
+#' - oversamlping parameter: the default value of ofac=4. \cr
+#' - confidence interval: the default value is CI=0.99. \cr
+#' - number of simulations: the default vale set to n.sim=1000.
 #'
 #' @examples
-#' # Import or simulate the data (simulation is chosen for illustrative purposes):
+#' \donttest{
+#' #1. Import or simulate the data (a simulation is chosen for illustrative purposes):
 #' DATA=simtuts(N=50,Harmonics=c(10,30,0), sin.ampl=c(10,10, 0), cos.ampl=c(0,0,0),
 #' trend=0,y.sd=3, ti.sd=1)
 #' y=DATA$observed$y.obs
 #' ti.mu=DATA$observed$ti.obs.tnorm
 #' ti.sd= rep(1, length(ti.mu))
 #'
-#' # (Set parameters and ) run multiple Lomb-Scargle periodograms:
-#' TULS=tuls(y=y,ti.mu=ti.mu,ti.sd=ti.sd)       # Optional parameters: ofac, CI, n.sim
+#' #2. Run multiple Lomb-Scargle periodograms (optional parameters are listed in brackets):
+#' TULS=tuls(y=y,ti.mu=ti.mu,ti.sd=ti.sd,n.sim=500)     # (ofac, CI).
 #'
-#'# Plot the results:
+#'#3. Plot the Lomb-Scargle periodograms:
 #' plot(TULS)
 #'
-#'# Obtain list of frequencies for which spectral power exceeds confidence interval prespecified in the tuts_ls class
+#'#4. Obtain list of frequencies for which spectral power exceeds confidence interval:
 #' summary(TULS)
-#'
+#'}
 #' @references  \url{https://en.wikipedia.org/wiki/Least-squares_spectral_analysis}
-#' @seealso \url{http://cran.r-project.org/package=Bchron}
+#' @seealso \url{https://cran.r-project.org/web/packages/Bchron/index.html}
 #' @export
 # TULS ----------------------------------------------------------------------------------------------
-tuls=function(y,ti.mu,ti.sd,...){
+tuls=function(y,ti.mu,ti.sd,n.sim=1000, ...){
   dots = list(...)
   if(missing(...)){ofac=4; CI=0.99;n.sim=1000}
 
@@ -51,12 +53,8 @@ tuls=function(y,ti.mu,ti.sd,...){
     if((round(ofac)==ofac)==FALSE | ofac<1){stop("ofac must be a positive integer.")}
   }
 
-  if(!is.numeric(dots$n.sim)){
-    n.sim=1000
-  } else{
-    n.sim=dots$n.sim
-    if (n.sim!=abs(round(n.sim))){stop("n.sim must be a positive integer.")}
-  }
+  n.sim=abs(n.sim)
+  if (n.sim!=abs(round(n.sim))){stop("n.sim must be a positive integer.")}
 
 
   if(length(y)*4!=length(ti.mu)*2+length(ti.sd)*2){stop("Vectors y, ti.mu and ti.sd should be of equal lengths.")}
@@ -92,64 +90,73 @@ tuls=function(y,ti.mu,ti.sd,...){
   # Generate outut ------------------------------------------------------------------
   output = list(Freq=FRQ,Power=PWR,Significance=SIG,CI=CI)
   class(output) = 'tuts_ls'
-  plot(output)
+  graphics::plot(output)
   return(output)
 }
 
 #' Plot of spectral densities of tuts_LS objects.
 #'
-#' \code{plot.tuts_LS} Plots a tuts_LS object
+#' \code{plot.tuts_ls} plots spectra of tuts_LS objects.
 #'
 #' @param x A tuts_LS obect.
-#'
-#'
+#' @param ... optional arguments are not in use in the current version on tuts.
 #' @examples
-#' # Simulate time-uncertain time series:
-#' DATA=simtuts(N=100,Harmonics=c(10,30,0), sin.ampl=c(10,10, 0), cos.ampl=c(0,0,0),
+#' \donttest{
+#' #1. Import or simulate the data (simulation is chosen for illustrative purposes):
+#' DATA=simtuts(N=50,Harmonics=c(10,30,0), sin.ampl=c(10,10, 0), cos.ampl=c(0,0,0),
 #' trend=0,y.sd=3, ti.sd=1)
+#' y=DATA$observed$y.obs
+#' ti.mu=DATA$observed$ti.obs.tnorm
+#' ti.sd= rep(1, length(ti.mu))
 #'
-#' # (Set parameters and ) run multiple Lomb-Scargle periodograms:
-#' TULS=tuls(y=y,ti.mu=ti.mu,ti.sd=ti.sd)       # This funclion also plots spectral densities.
-#'                                              # Optional parameters: ofac, CI, n.sim.
+#' #2. Run multiple Lomb-Scargle periodograms (optional parameters are listed in brackets):
+#' TULS=tuls(y=y,ti.mu=ti.mu,ti.sd=ti.sd,n.sim=500)     # (ofac, CI).
 #'
-#'# Plot the results:
+#'#3. Plot the Lomb-Scargle periodograms:
 #' plot(TULS)
-#'
+#'}
 #' @export
-plot.tuts_ls = function(x) {
-  par(mfrow=c(1,1))
-  plot(x[[1]][,1],x[[2]][,1],type='l',ylim=c(0,max(x[[2]])),xlab='frequency',ylab='normalised power',
+plot.tuts_ls = function(x, ...) {
+  #dots = list(...)
+  graphics::par(mfrow=c(1,1))
+  graphics::plot(x[[1]][,1],x[[2]][,1],type='l',ylim=c(0,max(x[[2]])),xlab='frequency',ylab='normalised power',
        main=paste('Lomb-Scargle Periodogram \n (number of ti realizations = ',toString(dim(x[[2]])[2]),')',sep='')
        )
-  lines(x[[1]][,1],   rep(mean(x$Significance),length(x[[1]][,1])), type='l',lty=2)
+  graphics::lines(x[[1]][,1],   rep(mean(x$Significance),length(x[[1]][,1])), type='l',lty=2)
   for (i in 2:dim(x[[2]])[2]){
-    lines(x[[1]][,i],x[[2]][,i],type='l')
+    graphics::lines(x[[1]][,i],x[[2]][,i],type='l')
   }
-  legend("topright",legend = c("Power",paste("Signifficance level at CI=",x$CI*100,"%",sep="")),
+  graphics::legend("topright",legend = c("Power",paste("Signifficance level at CI=",x$CI*100,"%",sep="")),
          col=c("black","blue"),lwd=c(1,1),lty=c(1,2))
 }
 
 
 #' Function returning a list of frequencies having significant power estimates.
 #'
-#' \code{summary.tuts_LS} Function returning a list of frequencies for which spectral power exceeds prespecified
-#'  confidence interval contained in tuts_LS objects.
+#' \code{summary.tuts_LS} returns a list of frequencies exceeding confidence intervals.
 #'
-#' @param x A tuts_LS obect.
+#' @param object A tuts_LS obect.
+#' @param ... optional arguments, not in use in the current version on tuts.
 #'
 #' @examples
-#' # Simulate time-uncertain time series:
-#' DATA=simtuts(N=100,Harmonics=c(10,30,0), sin.ampl=c(10,10, 0), cos.ampl=c(0,0,0),
+#' \donttest{
+#' #1. Import or simulate the data (simulation is chosen for illustrative purposes):
+#' DATA=simtuts(N=50,Harmonics=c(10,30,0), sin.ampl=c(10,10, 0), cos.ampl=c(0,0,0),
 #' trend=0,y.sd=3, ti.sd=1)
+#' y=DATA$observed$y.obs
+#' ti.mu=DATA$observed$ti.obs.tnorm
+#' ti.sd= rep(1, length(ti.mu))
 #'
-#' # (Set parameters and ) run multiple Lomb-Scargle periodograms:
-#' TULS=tuls(y=y,ti.mu=ti.mu,ti.sd=ti.sd)       # Optional parameters: ofac, CI, n.sim.
+#' #2. Run multiple Lomb-Scargle periodograms (optional parameters are listed in brackets):
+#' TULS=tuls(y=y,ti.mu=ti.mu,ti.sd=ti.sd,n.sim=500)     # (ofac, CI).
 #'
-#'# Obtain list of frequencies for which spectral power exceeds prespecified confidence interval
+#'#3. Obtain list of frequencies for which spectral power exceeds confidence interval:
 #' summary(TULS)
+#' }
 #' @export
 
-summary.tuts_ls = function(x) {
-  FRQ=apply(x$Freq,1,mean)[apply(x$Power,1,max)>mean(x$Significance)]
+summary.tuts_ls = function(object, ...) {
+  dots = list(...)
+  FRQ=apply(object$Freq,1,mean)[apply(object$Power,1,max)>mean(object$Significance)]
   return(frequencies=FRQ)
 }
