@@ -45,11 +45,9 @@
 #' @export
 #'
 tupoisbsf=function(y,ti.mu,ti.sd,n.sim,CV=FALSE,...){
-  # Data checking and basic operations ---------------------------------------------------------------------
+  # Data checking and basic operations
   if (length(y)*4!=length(ti.mu)*2+length(ti.sd)*2){stop("Vectors y, ti.mu and ti.sd should be of equal lengths.")}
   if(is.numeric(y)==FALSE ){stop("y must be a vector of rational numbers.")}
-  #if(is.numeric(ti.mu)==FALSE | sum((ti.mu)<0)>0 ){
-   # stop("ti.mu must be a vector of positive rational numbers.")}
   if(is.numeric(ti.sd)==FALSE | sum((ti.sd)<0)>0 ){
     stop("ti.sd must be a vector of positive rational numbers.")}
   if (sum(is.na(c(y,ti.mu,ti.sd)))>0){stop("Remove NAs.")}
@@ -94,7 +92,7 @@ tupoisbsf=function(y,ti.mu,ti.sd,n.sim,CV=FALSE,...){
 
   y=y[order(ti.mu,decreasing = FALSE)]; ti.sd=ti.sd[order(ti.mu,decreasing = FALSE)]
   ti.mu=ti.mu[order(ti.mu,decreasing = FALSE)]
-  # Freq vector --------------------------------------------------------------------------------------------
+  # Freq vector
   if (is.character(freqs)){
     freqs=seq(1/(max(ti.mu)-min(ti.mu)),floor(0.5 * length(y)) /(max(ti.mu)-min(ti.mu)),
               by = 1/(max(ti.mu)-min(ti.mu)))
@@ -116,9 +114,9 @@ tupoisbsf=function(y,ti.mu,ti.sd,n.sim,CV=FALSE,...){
     }
   }
 
-  # JAGS model --------------------------------------------------------------------------------------------
+  # JAGS model
   modelstring="model {
-# Likelihood ---------------------------------------------------------------------------------------------
+# Likelihood
   for(i in 1:n) {
   y[i]~dpois(lambda[i])
   log(lambda[i])<-const+alpha1*ti.sim[i]+alpha2*ti.sim[i]^2+alpha3*ti.sim[i]^3+inprod(X[i,],IBeta)
@@ -153,7 +151,7 @@ tupoisbsf=function(y,ti.mu,ti.sd,n.sim,CV=FALSE,...){
   Spectrum<-(IBeta[1:n.freqs]^2+IBeta[(n.freqs+1):(2*n.freqs)]^2)/2
 
 }"
-# R2Jags Main Sim  ---------------------------------------------------------------------------------------
+# R2Jags Main Sim
   data=list(y=y, ti.mu=ti.mu,ti.sd=ti.sd, n=length(ti.mu), n.freqs=length(freqs), freqs=freqs, pi=pi,m=m)
   for(k in (1:n.chains)){
     inits = parallel.seeds("base::BaseRNG", n.chains)
@@ -176,7 +174,7 @@ tupoisbsf=function(y,ti.mu,ti.sd,n.sim,CV=FALSE,...){
   Sim.Objects$JAGS=output
   Sim.Objects$DIC=DIC
 
-  # Cross Validation -------------------------------------------------------------------------------------------------
+  # Cross Validation
   if(CV==TRUE){
     print(noquote('Cross-validation of the model....'))
     folds = 5
@@ -271,7 +269,7 @@ summary.tuts_poisBFS = function(object, ...) {
   }
   n.sim=dim(object$const)[1]
   if (burn==0){BURN=1}else{BURN=floor(burn*n.sim)}
-  # ----------------------------------------------------------------------------
+  #
   cat('\n')
   cat('Bayesian Frequency Selection:\n')
   cat('-----------------------------\n')
@@ -292,7 +290,7 @@ summary.tuts_poisBFS = function(object, ...) {
   TABLE=data.frame(Frequency,Period,PWR.med,PWR.upr,PWR.lwr,Probability)
   rownames(TABLE)=paste("Pwr",1:length(Frequency),sep=" ")
   print(TABLE)
-  # ----------------------------------------------------------------------------
+  #
   cat('\n')
   cat('Regression Parameters and estimates of timing:\n')
   cat('----------------------------------------------\n')
@@ -362,7 +360,7 @@ summary.tuts_poisBFS = function(object, ...) {
   colnames(TABLE2)=c(paste(round((1-CI)/2,3)*100,"%",sep=""),'50%',paste(round(1-(1-CI)/2,3)*100,"%",sep=""))
   print(TABLE2)
 
-  # ----------------------------------------------------------------------------
+  #
   cat('\n')
   cat('Deviance information criterion:\n')
   cat('-------------------------------\n')
@@ -452,7 +450,7 @@ plot.tuts_poisBFS = function(x, type, ...) {
     Probability=apply(IND,2,sum)/(dim(IND)[1])
     DIV=round(max(PWR.upr)/4,- floor(log10(max(PWR.upr)/4)))
     YLAB=seq(from=0,to=4*DIV, by=DIV)
-    # ----------------------------------------------------------------------------
+    #
     graphics::par(mar=c(5,5,5,5))
     graphics::par(mfrow=c(1,1))
     graphics::plot(x=Frequency,y=PWR.med,pch=20,xlab="frequency", ylab="",ylim=c(-0.4*max(PWR.upr), 1.25*max(PWR.upr)),yaxt="n", main="BFS Spectrum")
@@ -471,7 +469,7 @@ plot.tuts_poisBFS = function(x, type, ...) {
     graphics::mtext("Probability", side=4, line=2.5,at=max(PWR.upr)*0.04/2)
   }
 
-  # ----------------------------------------------------------------------------
+  #
   if(type=='cv') {
     if (sum(names(x)=="CVpred")<1){stop("Object does not contain cross validation")}
     PRED=apply(x$CVpred[BURN:dim(x$CVpred)[1],],2,'quantile',0.5)
@@ -486,7 +484,7 @@ plot.tuts_poisBFS = function(x, type, ...) {
     graphics::text(x=(min(x$y)+0.9*(max(x$y)-min(x$y))),y=(min(PRED)+0.1*(max(PRED)-min(PRED))),LAB)
   }
 
-  # ----------------------------------------------------------------------------
+  #
   if(type=='predTUTS') {
     if (sum(names(x)=="CVpred")<1){stop("Object does not contain cross validation")}
     PRED.LWR=apply(x$CVpred[BURN:dim(x$CVpred)[1],],2,'quantile',(1-CI)/2)
@@ -505,7 +503,7 @@ plot.tuts_poisBFS = function(x, type, ...) {
     graphics::legend("topright",legend = c("Observed","Upper CI","Medium","Lower CI"),
            col=c("black","blue","blue","blue"),lwd=c(2,1,1,1),lty=c(1,2,1,2))
   }
-  # ----------------------------------------------------------------------------
+  #
   if(type=='GR') {
     if(burn>0){ABURNIN=TRUE} else{ABURNIN=FALSE}
 
@@ -545,7 +543,7 @@ plot.tuts_poisBFS = function(x, type, ...) {
     graphics::legend("topright", c("Estimate"),lty=c(NA),pch=c(1),lwd=c(1), col=c("black"),border="white")
     graphics::abline(h=1);
 
-    # ----------------------------------------------------------------------------
+    #
     par_to_use = grep('Spectrum',colnames(x$JAGS[[1]]))
     GELMAN.SPC <- matrix(NA, nrow=length(par_to_use), ncol=3)
     for (v in 1:length(par_to_use)) {
@@ -569,7 +567,7 @@ plot.tuts_poisBFS = function(x, type, ...) {
     graphics::text(x=seq(1,dim(GELMAN.SPC)[1],by=1),y=-max(GELMAN.SPC[,1:2]) /2.5, srt = 00, adj= 0.5, xpd = TRUE, srt = 90,
          labels =paste("Pwr",1:dim(GELMAN.SPC)[1]), cex=0.65)
 
-    # ----------------------------------------------------------------------------
+    #
     par_to_use = grep('ti.sim',colnames(x$JAGS[[1]]))
     GELMAN.TIS <- matrix(NA, nrow=length(par_to_use), ncol=3)
     for (v in 1:length(par_to_use)) {
@@ -592,7 +590,7 @@ plot.tuts_poisBFS = function(x, type, ...) {
          labels =paste("t.sim",1:dim(GELMAN.TIS)[1]), cex=0.65)
     graphics::legend("topright", c("Estimate"),lty=c(NA),pch=c(1),lwd=c(1), col=c("black"),border="white")
 
-    # ----------------------------------------------------------------------------
+    #
     par_to_use = grep('lambda',colnames(x$JAGS[[1]]))
     GELMAN.TIS <- matrix(NA, nrow=length(par_to_use), ncol=3)
     for (v in 1:length(par_to_use)) {
@@ -616,7 +614,7 @@ plot.tuts_poisBFS = function(x, type, ...) {
     graphics::legend("topright", c("Estimate"),lty=c(NA),pch=c(1),lwd=c(1), col=c("black"),border="white")
     graphics::par(mfrow=c(1,1))
   }
-  # ----------------------------------------------------------------------------
+  #
   if(type=='lambda') {
     lambda=x$lambda[BURN:dim(x$lambda)[1],]
     lambda.lwr=apply(lambda,2,'quantile',(1-CI)/2)
@@ -641,7 +639,7 @@ plot.tuts_poisBFS = function(x, type, ...) {
 
 
   }
-  # ----------------------------------------------------------------------------
+  #
     if(type=='mcmc') {
 
     ALL_Objects=names(x)

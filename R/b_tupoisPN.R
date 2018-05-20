@@ -41,7 +41,7 @@
 #' @export
 #'
 tupoispn=function(y,ti.mu,ti.sd, n.sim, polyorder=3, CV=FALSE, ... ){
-# Data checking and basic operations ---------------------------------------------------------------------
+# Data checking and basic operations
 if (length(y)*4!=length(ti.mu)*2+length(ti.sd)*2){stop("Vectors y, ti.mu and ti.sd should be of equal lengths.")}
 if(is.numeric(y)==FALSE ){stop("y must be a vector of rational numbers.")}
 if(is.numeric(ti.mu)==FALSE | sum((ti.mu)<0)>0 ){
@@ -77,7 +77,7 @@ if (!is.logical(CV)){stop("CV must be a logical value.")}
 y=y[order(ti.mu,decreasing = FALSE)]; ti.sd=ti.sd[order(ti.mu,decreasing = FALSE)]
 ti.mu=ti.mu[order(ti.mu,decreasing = FALSE)]
 
-# JAGS model --------------------------------------------------------------------------------------------
+# JAGS model
 modelstring= "model {
 for(i in 1:n) {
   y[i]~dpois(lambda[i])
@@ -99,7 +99,7 @@ for(i in 1:polyorder){
 const~dnorm(0,0.01)
 }"
 
-# JAGS data ---------------------------------------------------------------------------------------------
+# JAGS data
 data=list(y=y, ti.mu=ti.mu,ti.sd=ti.sd, n=length(ti.mu),polyorder=polyorder)
 
 inits=parallel.seeds("base::BaseRNG", n.chains)
@@ -117,7 +117,7 @@ DIC = dic.samples(model=model,n.iter=n.sim,thin=Thin)
 Sim.Objects=JAGS.objects(output)
 Sim.Objects$JAGS=output
 Sim.Objects$DIC=DIC
-# Cross Validation -------------------------------------------------------------------------------------------------
+# Cross Validation
 if(CV==TRUE){
   print(noquote('Cross-validation of the model....'))
   folds = 5
@@ -211,7 +211,7 @@ summary.tuts_poisPN = function(object, ...) {
   n.sim=dim(object$const)[1]
   if (burn==0){BURN=1}else{BURN=floor(burn*n.sim)}
 
-  # ----------------------------------------------------------------------------
+  #
   cat('\n')
   cat('Regression Parameters and estimates of timing:\n')
   cat('----------------------------------------------\n')
@@ -250,7 +250,7 @@ summary.tuts_poisPN = function(object, ...) {
 
   colnames(TABLE2)=c(paste(round((1-CI)/2,3)*100,"%",sep=""),'50%',paste(round(1-(1-CI)/2,3)*100,"%",sep=""))
   print(TABLE2)
-  # ----------------------------------------------------------------------------
+  #
   cat('\n')
   cat('Deviance information criterion:\n')
   cat('-------------------------------\n')
@@ -323,7 +323,7 @@ plot.tuts_poisPN = function(x, type, ...) {
   if (burn==0){BURN=1}else{BURN=floor(burn*n.sim)}
 
   graphics::par(mfrow=c(1,1))
-  # ----------------------------------------------------------------------------
+  #
   if(type=='cv') {
     if (sum(names(x)=="CVpred")<1){stop("Object does not contain cross validation")}
     PRED=apply(x$CVpred[BURN:dim(x$CVpred)[1],],2,'quantile',0.5)
@@ -337,7 +337,7 @@ plot.tuts_poisPN = function(x, type, ...) {
     LAB = bquote(italic(R)^2 == .(paste(format(RSQ, digits = 0),"%",sep="")))
     graphics::text(x=(min(x$y)+0.9*(max(x$y)-min(x$y))),y=(min(PRED)+0.1*(max(PRED)-min(PRED))),LAB)
   }
-  # ----------------------------------------------------------------------------
+  #
   if(type=='predTUTS') {
     if (sum(names(x)=="CVpred")<1){stop("Object does not contain cross validation")}
     PRED.LWR=apply(x$CVpred[BURN:dim(x$CVpred)[1],],2,'quantile',(1-CI)/2)
@@ -358,7 +358,7 @@ plot.tuts_poisPN = function(x, type, ...) {
     graphics::legend("topright",legend = c("Observed","Upper CI","Medium","Lower CI"),
            col=c("black","blue","blue","blue"),lwd=c(2,1,1,1),lty=c(1,2,1,2))
   }
-  # ----------------------------------------------------------------------------
+  #
   if(type=='GR') {
     if(burn>0){ABURNIN=TRUE} else{ABURNIN=FALSE}
 
@@ -399,7 +399,7 @@ plot.tuts_poisPN = function(x, type, ...) {
     graphics::legend("topright", c("Estimate"),lty=c(NA),pch=c(1),lwd=c(1), col=c("black"),border="white")
     graphics::abline(h=1);
 
-    # ----------------------------------------------------------------------------
+    #
     par_to_use = grep('ti.sim',colnames(x$JAGS[[1]]))
     GELMAN.TIS <- matrix(NA, nrow=length(par_to_use), ncol=3)
     for (v in 1:length(par_to_use)) {
@@ -422,7 +422,7 @@ plot.tuts_poisPN = function(x, type, ...) {
          labels =paste("t.sim",1:dim(GELMAN.TIS)[1]), cex=0.65)
     graphics::legend("topright", c("Estimate"),lty=c(NA),pch=c(1),lwd=c(1), col=c("black"),border="white")
 
-    # ----------------------------------------------------------------------------
+    #
     par_to_use = grep('lambda',colnames(x$JAGS[[1]]))
     GELMAN.TIS <- matrix(NA, nrow=length(par_to_use), ncol=3)
     for (v in 1:length(par_to_use)) {
@@ -447,7 +447,7 @@ plot.tuts_poisPN = function(x, type, ...) {
 
     graphics::par(mfrow=c(1,1))
   }
-  # ----------------------------------------------------------------------------
+  #
   if(type=='lambda') {
     lambda=x$lambda[BURN:dim(x$lambda)[1],]
     lambda.lwr=apply(lambda,2,'quantile',(1-CI)/2)
@@ -468,7 +468,7 @@ plot.tuts_poisPN = function(x, type, ...) {
            col=c("blue","black","blue"),lwd=c(1,1,1),lty=c(2,1,2))
 
   }
-  # ----------------------------------------------------------------------------
+  #
   if(type=='mcmc') {
     mcmcplot(x$JAGS)
   }

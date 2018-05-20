@@ -34,7 +34,7 @@
 #' @references  \url{https://en.wikipedia.org/wiki/Least-squares_spectral_analysis}
 #' @seealso \url{https://cran.r-project.org/web/packages/Bchron/index.html}
 #' @export
-# TULS ----------------------------------------------------------------------------------------------
+# TULS
 tuls=function(y,ti.mu,ti.sd,n.sim=1000, ...){
   dots = list(...)
   if(missing(...)){ofac=4; CI=0.99;n.sim=1000}
@@ -63,10 +63,10 @@ tuls=function(y,ti.mu,ti.sd,n.sim=1000, ...){
   if(is.numeric(ti.sd)==FALSE | sum((ti.sd)<0)>0 ){stop("ti.sd must be a vector of positive rational numbers.")}
 
   alpha=1-CI
-# Order observations --------------------------------------------------------------
+# Order observations
   y=y[order(ti.mu,decreasing = FALSE)];ti.sd=ti.sd[order(ti.mu,decreasing = FALSE)];
   ti.mu=ti.mu[order(ti.mu,decreasing = FALSE)]
-# Apply Lomb-Scargle and simulate -------------------------------------------------
+# Apply Lomb-Scargle and simulate
   LSP=lsp(y,ti.mu,ofac=ofac,plot=FALSE,alpha=alpha)
   N=LSP$n.out
   PWR=FRQ=array(NA,dim=c(N,n.sim))
@@ -87,7 +87,7 @@ tuls=function(y,ti.mu,ti.sd,n.sim=1000, ...){
       }
     }
   }
-  # Generate outut ------------------------------------------------------------------
+  # Generate outut
   output = list(Freq=FRQ,Power=PWR,Significance=SIG,CI=CI)
   class(output) = 'tuts_ls'
   graphics::plot(output)

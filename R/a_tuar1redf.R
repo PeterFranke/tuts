@@ -46,7 +46,7 @@
 #' }
 #' @export
 tuar1redf=function(y,ti.mu,ti.sd,n.sim,n.chains=2,CV=FALSE,...){
-# Data checking and basic operations ---------------------------------------------------------------------
+# Data checking and basic operations
 if (length(y)*2!=length(ti.mu)+length(ti.sd)){stop("Verify the input data.")}
 if(is.numeric(y)==FALSE ){stop("y must be a vector of rational numbers.")}
 if(is.numeric(ti.mu)==FALSE | sum((ti.mu)<0)>0 ){
@@ -67,7 +67,7 @@ if (!is.logical(CV)){stop("CV must be a logical value.")}
   }
 y=y[order(ti.mu,decreasing = FALSE)]; ti.sd=ti.sd[order(ti.mu,decreasing = FALSE)]
 ti.mu=ti.mu[order(ti.mu,decreasing = FALSE)]
-# JAGS model --------------------------------------------------------------------------------------------
+# JAGS model
 modelstring="model {
 for (i in 2:n) {
   y[i]~ dnorm(y[i-1] * exp(-(ti.sim[i]-ti.sim[i-1])/tau),1/(1-exp(-2*(ti.sim[i]-ti.sim[i-1])/tau )))
@@ -85,7 +85,7 @@ ar1adj<-ar1+(1+3*ar1)/(n-1)
 tau~dlnorm(0, 0.001)
 }"
 
-# R2Jags Main Sim  ---------------------------------------------------------------------------------------
+# R2Jags Main Sim
 data=list(y=y,ti.mu=ti.mu,ti.prec=1/ti.sd^2,n=length(ti.mu))
 for(k in (1:n.chains)){
   inits = parallel.seeds("base::BaseRNG", n.chains)
@@ -99,7 +99,7 @@ Sim.Objects=JAGS.objects(output)
 Sim.Objects$JAGS=output
 Sim.Objects$DIC=DIC
 
-# Cross Validation -------------------------------------------------------------------------------------------------
+# Cross Validation
 if(CV==TRUE){
   print(noquote('Cross-validation of the model....'))
   folds = 5
@@ -188,7 +188,7 @@ summary.tuts_ar1redf = function(object, ...) {
   }
   n.sim=dim(object$ar1)[1]
   if (burn==0){BURN=1}else{BURN=floor(burn*n.sim)}
-  # ----------------------------------------------------------------------------
+  #
   cat('\n')
   cat('Estimates of parameters of interest and timing:\n')
   cat('-----------------------------------------------\n')
@@ -221,7 +221,7 @@ summary.tuts_ar1redf = function(object, ...) {
 
   colnames(TABLE2)=c(paste(round((1-CI)/2,3)*100,"%",sep=""),'50%',paste(round(1-(1-CI)/2,3)*100,"%",sep=""))
   print(TABLE2)
-  # ----------------------------------------------------------------------------
+  #
   cat('\n')
   cat('Deviance information criterion:\n')
   cat('-------------------------------\n')

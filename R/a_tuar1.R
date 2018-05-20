@@ -38,7 +38,7 @@
 #' @export
 #'
 tuar1=function(y,ti.mu,ti.sd,n.sim,CV=FALSE, ...){
-# Data checking and basic operations ---------------------------------------------------------------------
+# Data checking and basic operations
 if (length(y)*2!=length(ti.mu)+length(ti.sd)){stop("Verify the input data.")}
 if(is.numeric(y)==FALSE ){stop("y must be a vector of rational numbers.")}
 if(is.numeric(ti.sd)==FALSE | sum((ti.sd)<0)>0 ){
@@ -46,7 +46,7 @@ if(is.numeric(ti.sd)==FALSE | sum((ti.sd)<0)>0 ){
 if (sum(is.na(c(y,ti.mu,ti.sd)))>0){stop("Remove NAs.")}
 if (n.sim!=abs(round(n.sim))){stop("n.sim must be a positive integer.")}
 if (!is.logical(CV)){stop("CV must be a logical value.")}
-  # ----------------------------------------------------------------------------
+  #
   dots = list(...)
   if(missing(...)){Thin=4; n.chains=2}
   if(!is.numeric(dots$Thin)){
@@ -63,7 +63,7 @@ if (!is.logical(CV)){stop("CV must be a logical value.")}
 y=y[order(ti.mu,decreasing = FALSE)]; ti.sd=ti.sd[order(ti.mu,decreasing = FALSE)]
 ti.mu=ti.mu[order(ti.mu,decreasing = FALSE)]
 modelstring="model {
-  # Likelihood  ----------------------------------------------------------------------------------------
+  # Likelihood
   for (i in 2:n) {
     y[i]~ dnorm(const+ alpha1*y[i-1]*(ti.sim[i]-ti.sim[i-1]),precision/sqrt(ti.sim[i]-ti.sim[i-1]))
   }
@@ -72,13 +72,13 @@ modelstring="model {
   }
   ti.sim<-sort(ti.sim.tmp)
 
-  # Priors   ----------------------------------------------------------------------------------------------
+  # Priors
   const~ dnorm(0,1)
   alpha1~ dnorm(0,1)
   precision~dgamma(1.0E-3, 1.0E-3)
 }"
 
-# R2Jags Main Sim  ---------------------------------------------------------------------------------------
+# R2Jags Main Sim
 data=list(y=y,ti.mu=ti.mu,ti.prec=1/ti.sd^2,n=length(ti.mu))
 for(k in (1:n.chains)){
   inits = parallel.seeds("base::BaseRNG", n.chains)
@@ -92,7 +92,7 @@ Sim.Objects$JAGS=output
 Sim.Objects$DIC=DIC
 Sim.Objects$y=y
 Sim.Objects$ti.mu=ti.mu
-# Cross Validation -------------------------------------------------------------------------------------------------
+# Cross Validation
 if(CV==TRUE){
   print(noquote('Cross-validation of the model....'))
   folds = 5
@@ -180,7 +180,7 @@ summary.tuts_ar1 = function(object, ...) {
   }
   n.sim=dim(object$const)[1]
   if (burn==0){BURN=1}else{BURN=floor(burn*n.sim)}
-  # ----------------------------------------------------------------------------
+  #
   cat('\n')
   cat('Estimates of parameters of interest and timing:\n')
   cat('-----------------------------------------------\n')
@@ -214,7 +214,7 @@ summary.tuts_ar1 = function(object, ...) {
 
   colnames(TABLE2)=c(paste(round((1-CI)/2,3)*100,"%",sep=""),'50%',paste(round(1-(1-CI)/2,3)*100,"%",sep=""))
   print(TABLE2)
-  # ----------------------------------------------------------------------------
+  #
   cat('\n')
   cat('Deviance information criterion:\n')
   cat('-------------------------------\n')
@@ -285,7 +285,7 @@ plot.tuts_ar1 = function(x, type, ...) {
   }
   n.sim=dim(x$alpha1)[1]
   if (burn==0){BURN=1}else{BURN=floor(burn*n.sim)}
-  # ----------------------------------------------------------------------------
+  #
   if(type=='par') {
     graphics::par(mfrow=c(1,3))
     graphics::plot(density(x$const[BURN:dim(x$const)[1]]),main="const")
@@ -293,7 +293,7 @@ plot.tuts_ar1 = function(x, type, ...) {
     graphics::plot(density(x$precision[BURN:dim(x$precision)[1]]),main="precision")
     graphics::par(mfrow=c(1,1))
   }
-  # ----------------------------------------------------------------------------
+  #
   if(type=='predTUTS') {
     if (sum(names(x)=="CVpred")<1){stop("Object does not contain cross validation")}
     PRED.LWR=apply(x$CVpred[BURN:dim(x$CVpred)[1],],2,'quantile',(1-CI)/2)
@@ -313,7 +313,7 @@ plot.tuts_ar1 = function(x, type, ...) {
     graphics::legend("topright",legend = c("Observed","Upper CI","Medium","Lower CI"),
            col=c("black","blue","blue","blue"),lwd=c(2,1,1,1),lty=c(1,2,1,2))
   }
-  # ----------------------------------------------------------------------------
+  #
   if(type=='cv') {
     if (sum(names(x)=="CVpred")<1){stop("Object does not contain cross validation")}
     PRED=apply(x$CVpred[BURN:dim(x$CVpred)[1],],2,'quantile',0.5)
@@ -329,7 +329,7 @@ plot.tuts_ar1 = function(x, type, ...) {
     graphics::text(x=(min(x$y)+0.9*(max(x$y)-min(x$y))),y=(min(PRED)+0.1*(max(PRED)-min(PRED))),LAB)
   }
 
-  # ----------------------------------------------------------------------------
+  #
   if(type=='GR') {
     if(burn>0){ABURNIN=TRUE} else{ABURNIN=FALSE}
 
@@ -356,12 +356,12 @@ plot.tuts_ar1 = function(x, type, ...) {
 
     graphics::par(mfrow=c(1,1))
 
-    # ----------------------------------------------------------------------------
+    #
   }
   if(type=='mcmc') {
     mcmcplot(x$JAGS, parms=c('const','alpha1','precision','ti.sim'))
   }
-  # ----------------------------------------------------------------------------
+  #
   if(type=='volatility') {
     graphics::plot(sqrt(sqrt(1/sqrt(x$precision[BURN:dim(x$precision)[1],]))),type='l', xlab='Sim ID',ylab='Std Deviation',main='Standard Deviaiton')
   }

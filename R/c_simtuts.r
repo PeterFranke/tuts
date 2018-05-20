@@ -42,7 +42,7 @@ simtuts=function(N,Harmonics,sin.ampl,cos.ampl,trend=0, y.sd,ti.sd){
   if(is.numeric(trend)==FALSE | length(trend)>1){stop("trend must be a real number.")}
   if(is.numeric(y.sd)==FALSE | length(y.sd)>1 | y.sd<0){stop("y.sd must be a positive rational number.")}
   if(is.numeric(ti.sd)==FALSE | length(ti.sd)>1 | ti.sd<0){stop("ti.sd must be a positive rational number.")}
-# Actual process ----------------------------------------------------------
+# Actual process
   ti.act=sort(runif(N,0,1))
   y.act=(trend*ti.act*N)
   for (i in 1:length(Harmonics)) {
@@ -50,7 +50,7 @@ simtuts=function(N,Harmonics,sin.ampl,cos.ampl,trend=0, y.sd,ti.sd){
     y.act=y.act +data
   }
   DATA.actual=data.frame(ti.act=ti.act*N,y.act=y.act)
-# Observed data -----------------------------------------------------------
+# Observed data
   y.obs=rnorm(N,y.act,y.sd)
   # using normally distributed timing
   ti.obs.norm=rnorm(n=N,mean = ti.act*N, sd=ti.sd)
@@ -63,7 +63,7 @@ simtuts=function(N,Harmonics,sin.ampl,cos.ampl,trend=0, y.sd,ti.sd){
   ti.obs.tnorm=rtruncnorm(1,a=ti.lower,b=ti.upper,mean=ti.act,sd=ti.sd)*N
   # DATA object
   DATA.observed=data.frame(y.obs=y.obs,ti.obs.norm=ti.obs.norm,ti.obs.tnorm=ti.obs.tnorm)
-# Output --------------------------------------------------------------------
+# Output
   OUTPUT= list(observed=DATA.observed, actual=DATA.actual)
   return(OUTPUT)
 }
