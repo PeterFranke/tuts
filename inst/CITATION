@@ -1,0 +1,17 @@
+citHeader("To cite tuts in publications use:")
+
+citEntry(entry = "Article",
+  title        = "Frequency selection in paleoclimate time series: A model-based approach incorporating possible time uncertainty",
+  author       = personList(as.person("Peter M Franke"),
+                   as.person("Brian Huntley"), as.person("Andrew C Parnell")),
+  journal      = "Environmetrics",
+  year         = "2018",
+  volume       = "29",
+  number       = "2",
+  pages        = "e2492",
+  publisher    = "Wiley Online Library",  
+  url          = "https://onlinelibrary.wiley.com/doi/abs/10.1002/env.2492/",
+
+  textVersion  =
+  paste("Franke, P. M., Huntley, B., & Parnell, A. C. (2018). Frequency selection in paleoclimate time series: A model‐based approach incorporating possible time uncertainty. Environmetrics, 29(2), e2492")
+)
